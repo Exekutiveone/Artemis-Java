@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# generate_drive_data_with_events.py
+# test.z.py – erweiterte Simulation mit Manöverklassifikation
 
 import numpy as np
 import pandas as pd
@@ -19,6 +19,20 @@ def classify_event(speed, acc, steering, distance_front):
     else:
         return "fahrt"
 
+def classify_manoeuvre(speed, steering, acc):
+    if abs(steering) < 5:
+        return "geradeaus"
+    elif steering > 15:
+        return "rechtskurve"
+    elif steering < -15:
+        return "linkskurve"
+    elif acc < -3 and speed > 10:
+        return "notbremsung"
+    elif speed < 2 and abs(steering) > 25:
+        return "wenden"
+    else:
+        return "normal"
+
 def simulate_drive_data(n: int = 1000, seed: int = 42) -> pd.DataFrame:
     rng = np.random.default_rng(seed)
 
@@ -34,6 +48,7 @@ def simulate_drive_data(n: int = 1000, seed: int = 42) -> pd.DataFrame:
     accel = np.gradient(speed)
 
     event_code = [classify_event(s, a, st, d) for s, a, st, d in zip(speed, accel, steering, distance_front)]
+    manoeuvre = [classify_manoeuvre(s, st, a) for s, st, a in zip(speed, steering, accel)]
 
     return pd.DataFrame({
         "speed_m_s": speed,
@@ -44,7 +59,8 @@ def simulate_drive_data(n: int = 1000, seed: int = 42) -> pd.DataFrame:
         "lateral_acc_m_s2": lateral_acc,
         "battery_pct": battery_pct,
         "distance_front_m": distance_front,
-        "event_code": event_code
+        "event_code": event_code,
+        "manoeuvre": manoeuvre
     })
 
 if __name__ == "__main__":
