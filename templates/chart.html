@@ -28,14 +28,12 @@
       background-color: #1e1e1e;
     }
     .stat-box {
-      padding: 20px;
-      font-size: 1.2rem;
-      font-weight: 600;
+      padding: 16px;
+      font-size: 1.1rem;
       background-color: #1e1e1e;
-      border: 2px solid #2c2c2c;
+      border: 1px solid #2c2c2c;
       border-radius: 8px;
-      color: #f8f9fa;
-      margin-bottom: 16px;
+      margin-bottom: 8px;
     }
     .chart-container {
       min-height: 400px;
@@ -106,7 +104,12 @@
         col.className = "col-12 col-md-6";
         col.innerHTML = `
           <div class="card p-3">
-            <div class="stat-box">Mittelwert: <span id="mean_${id}">-</span> | Median: <span id="median_${id}">-</span></div>
+            <div class="stat-box">
+              Mittelwert: <span id="mean_${id}">-</span> |
+              Median: <span id="median_${id}">-</span> |
+              Spannweite: <span id="range_${id}">-</span> |
+              IQA: <span id="iqr_${id}">-</span>
+            </div>
             <div class="chart-container"><canvas id="${id}"></canvas></div>
           </div>`;
         container.appendChild(col);
@@ -134,9 +137,15 @@
       const median = sorted.length % 2 === 0
         ? ((sorted[mid - 1] + sorted[mid]) / 2).toFixed(2)
         : sorted[mid].toFixed(2);
+      const rangeVal = (sorted[sorted.length - 1] - sorted[0]).toFixed(2);
+      const q1 = sorted[Math.floor(sorted.length * 0.25)];
+      const q3 = sorted[Math.floor(sorted.length * 0.75)];
+      const iqr = (q3 - q1).toFixed(2);
 
       document.getElementById(`mean_${id}`).textContent = avg;
       document.getElementById(`median_${id}`).textContent = median;
+      document.getElementById(`range_${id}`).textContent = rangeVal;
+      document.getElementById(`iqr_${id}`).textContent = iqr;
 
       chartRefs[id] = new Chart(ctx, {
         type: 'line',
@@ -170,9 +179,7 @@
           },
           plugins: {
             legend: { labels: { color: '#f8f9fa' } },
-            title: {
-              display: false
-            }
+            title: { display: false }
           }
         }
       });
@@ -201,9 +208,7 @@
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: {
-              labels: { color: '#f8f9fa' }
-            }
+            legend: { labels: { color: '#f8f9fa' } }
           }
         }
       });
