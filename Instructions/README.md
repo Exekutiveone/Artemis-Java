@@ -37,7 +37,12 @@ python app.py
 The application will start a local development server and open `http://localhost:5000/`,
 which provides links to the available views.  The interactive chart is accessible
 at `http://localhost:5000/chart` and now displays the GPS route on an interactive
-Leaflet map.  Additional analysis pages are served at
+Leaflet map.
+
+### Offline JavaScript libraries
+
+`Chart.js` is bundled in `static/js/chart.min.js` so the app works without internet
+access.  Additional analysis pages are served at
 `/zweidimensionale_analyse.html` and `/analyse/drive_style.html`.
 
 ### Terrain map preview
