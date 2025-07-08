@@ -23,7 +23,11 @@ def load_series():
         "battery": df["battery_pct"].tolist(),
         "distance_front": df["distance_front_m"].tolist(),
         "event": df["event_code"].tolist(),
-        "manoeuvre": df["manoeuvre"].tolist()
+        "manoeuvre": df["manoeuvre"].tolist(),
+        "terrain_type": df["terrain_type"].tolist(),
+        "weather_condition": df["weather_condition"].tolist(),
+        "gps_lat": df["gps_lat"].round(6).tolist(),
+        "gps_lon": df["gps_lon"].round(6).tolist(),
     }
 
 @app.route("/")
