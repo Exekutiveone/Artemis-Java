@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from flask import Flask, render_template
+from flask import Flask, render_template, send_from_directory
 import pandas as pd
 from pathlib import Path
 import os
@@ -48,10 +48,32 @@ def load_analysis_results():
 
 @app.route("/")
 def index():
+    return render_template("index.html")
+
+
+@app.route("/chart")
+def chart():
     idx, series = load_series()
-    # Ensure regression analysis data is available
     analysis = load_analysis_results()
     return render_template("chart.html", idx=idx, series=series, analysis=analysis)
+
+
+@app.route("/zweidimensionale_analyse.html")
+def zweidimensionale_analyse():
+    """Serve the zweidimensionale Analyse page."""
+    return send_from_directory(app.root_path, "zweidimensionale_analyse.html")
+
+
+@app.route("/analyse/drive_style.html")
+def drive_style_html():
+    """Serve the drive style analysis page."""
+    return send_from_directory(os.path.join(app.root_path, "analyse"), "drive_style.html")
+
+
+@app.route("/analyse/drive_style.js")
+def drive_style_js():
+    """Serve the drive style script."""
+    return send_from_directory(os.path.join(app.root_path, "analyse"), "drive_style.js")
 
 if __name__ == "__main__":
     app.run(debug=True)
