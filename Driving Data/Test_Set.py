@@ -76,6 +76,6 @@ def simulate_drive_data(n: int = 1000, seed: int = 42) -> pd.DataFrame:
 
 if __name__ == "__main__":
     df = simulate_drive_data()
-    path = Path("fahrtanalyse_daten.csv")
+    path = Path(__file__).resolve().parent.parent / "Data Base" / "fahrtanalyse_daten.csv"
     df.to_csv(path, index=False)
     print(f"CSV geschrieben: {path.resolve()}")

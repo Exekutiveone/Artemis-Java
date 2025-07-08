@@ -1,5 +1,10 @@
 import json
 import pandas as pd
+import os
+import sys
+
+# Allow importing from this directory when executed as a script
+sys.path.insert(0, os.path.dirname(__file__))
 from drive_style_analyzer import LABELS
 
 LABEL_MAP = {
