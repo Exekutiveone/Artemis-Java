@@ -75,6 +75,7 @@
     const labelsFull = {{ idx|tojson|safe }};
     const sFull = {{ series|tojson|safe }};
   </script>
+  <script src="{{ url_for('static', filename='js/calculate.js') }}"></script>
   <script src="{{ url_for('static', filename='js/chart.js') }}"></script>
 </body>
 </html>

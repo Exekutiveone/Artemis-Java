@@ -58,21 +58,12 @@ function buildChart(id, label, data, range) {
   if (chartRefs[id]) chartRefs[id].destroy();
 
   const sliced = data.slice(range[0], range[1]);
-  const avg = (sliced.reduce((a, b) => a + b, 0) / sliced.length).toFixed(2);
-  const sorted = [...sliced].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  const median = sorted.length % 2 === 0
-    ? ((sorted[mid - 1] + sorted[mid]) / 2).toFixed(2)
-    : sorted[mid].toFixed(2);
-  const rangeVal = (sorted[sorted.length - 1] - sorted[0]).toFixed(2);
-  const q1 = sorted[Math.floor(sorted.length * 0.25)];
-  const q3 = sorted[Math.floor(sorted.length * 0.75)];
-  const iqr = (q3 - q1).toFixed(2);
+  const stats = computeStats(sliced);
 
-  document.getElementById(`mean_${id}`).textContent = avg;
-  document.getElementById(`median_${id}`).textContent = median;
-  document.getElementById(`range_${id}`).textContent = rangeVal;
-  document.getElementById(`iqr_${id}`).textContent = iqr;
+  document.getElementById(`mean_${id}`).textContent = stats.avg;
+  document.getElementById(`median_${id}`).textContent = stats.median;
+  document.getElementById(`range_${id}`).textContent = stats.rangeVal;
+  document.getElementById(`iqr_${id}`).textContent = stats.iqr;
 
   chartRefs[id] = new Chart(ctx, {
     type: 'line',
