@@ -27,3 +27,14 @@ function computeStats(data) {
     varCoeff: varCoeffNum.toFixed(2)
   };
 }
+
+function computeMovingAverage(data, window) {
+  const result = [];
+  for (let i = 0; i < data.length; i++) {
+    const start = Math.max(0, i - window + 1);
+    const slice = data.slice(start, i + 1);
+    const avg = slice.reduce((sum, v) => sum + v, 0) / slice.length;
+    result.push(Number(avg.toFixed(2)));
+  }
+  return result;
+}

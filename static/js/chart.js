@@ -28,6 +28,7 @@ const chartData = [
 ];
 
 const chartRefs = {};
+const MA_WINDOW = 10;
 
 function insertChartBoxes() {
   const container = document.getElementById("charts");
@@ -82,6 +83,7 @@ function buildChart(id, label, data, range) {
 
   const sliced = data.slice(range[0], range[1]);
   const styles = driveStyleData.slice(range[0], range[1]);
+  const movingAvg = computeMovingAverage(sliced, MA_WINDOW);
   const stats = computeStats(sliced);
 
   document.getElementById(`mean_${id}`).textContent = stats.avg;
@@ -105,6 +107,16 @@ function buildChart(id, label, data, range) {
           pointRadius: 0,
           tension: 0.15,
           fill: false
+        },
+        {
+          label: 'Gleitender Mittelwert',
+          data: movingAvg,
+          borderColor: '#f1c40f',
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.15,
+          fill: false,
+          borderDash: [5, 5]
         },
         {
           type: 'scatter',
