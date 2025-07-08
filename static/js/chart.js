@@ -184,10 +184,10 @@ function applyRange() {
 
   if (typeof buildAllLorenz === 'function') {
     buildAllLorenz(range);
+  }
 
   if (typeof buildLorenzChart === 'function') {
     buildLorenzChart(range);
-
   }
 }
 
