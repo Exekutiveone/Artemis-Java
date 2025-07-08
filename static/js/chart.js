@@ -54,6 +54,8 @@ function insertChartBoxes() {
           Std-Abw.: <span id="std_${id}">-</span> |
           V-Koeff.: <span id="vcoeff_${id}">-</span><br>
           Gini: <span id="gini_${id}">-</span> |
+          Trend: <span id="trend_${id}">-</span> |
+          Freq-Idx: <span id="freqidx_${id}">-</span>
           Trend: <span id="trend_${id}">-</span>
         </div>
       </div>`;
@@ -100,6 +102,7 @@ function buildChart(id, label, data, range) {
   const styles = driveStyleData.slice(range[0], range[1]);
   const movingAvg = computeMovingAverage(sliced, MA_WINDOW);
   const trend = computeTrend(sliced);
+  const freqIdx = computeDominantFreqIndex(sliced);
   const stats = computeStats(sliced);
 
   document.getElementById(`mean_${id}`).textContent = stats.avg;
@@ -110,6 +113,7 @@ function buildChart(id, label, data, range) {
   document.getElementById(`std_${id}`).textContent = stats.stdDev;
   document.getElementById(`vcoeff_${id}`).textContent = stats.varCoeff;
   document.getElementById(`trend_${id}`).textContent = trend.slope.toFixed(2);
+  document.getElementById(`freqidx_${id}`).textContent = freqIdx;
 
   chartRefs[id] = new Chart(ctx, {
     type: 'line',
