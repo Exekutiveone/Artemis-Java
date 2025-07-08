@@ -31,14 +31,17 @@ function insertChartBoxes() {
     col.className = "col-12 col-md-6";
     col.innerHTML = `
       <div class="card p-3">
-        <div class="stat-box">
+        <div class="chart-container mb-2"><canvas id="${id}"></canvas></div>
+        <div class="boxplot-container"><canvas id="boxplot_${id}"></canvas></div>
+        <div class="stat-box mt-2">
           Mittelwert: <span id="mean_${id}">-</span> |
           Median: <span id="median_${id}">-</span> |
           Spannweite: <span id="range_${id}">-</span> |
-          IQA: <span id="iqr_${id}">-</span>
+          IQA: <span id="iqr_${id}">-</span> |
+          Varianz: <span id="var_${id}">-</span> |
+          Std-Abw.: <span id="std_${id}">-</span> |
+          V-Koeff.: <span id="vcoeff_${id}">-</span>
         </div>
-        <div class="chart-container mb-2"><canvas id="${id}"></canvas></div>
-        <div class="boxplot-container"><canvas id="boxplot_${id}"></canvas></div>
       </div>`;
     container.appendChild(col);
   }
@@ -65,6 +68,9 @@ function buildChart(id, label, data, range) {
   document.getElementById(`median_${id}`).textContent = stats.median;
   document.getElementById(`range_${id}`).textContent = stats.rangeVal;
   document.getElementById(`iqr_${id}`).textContent = stats.iqr;
+  document.getElementById(`var_${id}`).textContent = stats.variance;
+  document.getElementById(`std_${id}`).textContent = stats.stdDev;
+  document.getElementById(`vcoeff_${id}`).textContent = stats.varCoeff;
 
   chartRefs[id] = new Chart(ctx, {
     type: 'line',
