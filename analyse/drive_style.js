@@ -1,7 +1,7 @@
 'use strict';
 
 document.addEventListener('DOMContentLoaded', () => {
-  fetch('drive_style_output.json')
+  fetch('/api/drive_style')
     .then(r => r.json())
     .then(renderCharts)
     .catch(err => console.error('fetch failed', err));

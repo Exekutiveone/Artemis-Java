@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
-from flask import Flask, render_template, send_from_directory
+from flask import Flask, render_template, send_from_directory, jsonify
 import pandas as pd
 from pathlib import Path
 import os
-import json
-import subprocess
-import sys
+from analysis_utils import compute_regression_pairs, compute_drive_style_series
 
 CSV_PATH = Path(__file__).resolve().parent / "fahrtanalyse_daten.csv"
-ANALYSIS_JSON = Path(__file__).resolve().parent / "regression_data.json"
-ANALYSIS_SCRIPT = Path(__file__).resolve().parent / "export_regression_data.py"
 
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -37,14 +33,8 @@ def load_series():
 
 
 def load_analysis_results():
-    """Return regression analysis data, generating it if necessary."""
-    if not ANALYSIS_JSON.exists():
-        subprocess.run(
-            [sys.executable, str(ANALYSIS_SCRIPT), str(CSV_PATH), str(ANALYSIS_JSON)],
-            check=True,
-        )
-    with open(ANALYSIS_JSON, "r") as f:
-        return json.load(f)
+    """Return regression analysis data computed from the CSV."""
+    return compute_regression_pairs(str(CSV_PATH))
 
 @app.route("/")
 def index():
@@ -74,6 +64,13 @@ def drive_style_html():
 def drive_style_js():
     """Serve the drive style script."""
     return send_from_directory(os.path.join(app.root_path, "analyse"), "drive_style.js")
+
+
+@app.route("/api/drive_style")
+def drive_style_api():
+    """Return drive style series as JSON."""
+    data = compute_drive_style_series(str(CSV_PATH))
+    return jsonify(data)
 
 if __name__ == "__main__":
     app.run(debug=True)
