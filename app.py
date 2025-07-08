@@ -48,8 +48,12 @@ def load_analysis_results():
 
 @app.route("/")
 def index():
+    return render_template("index.html")
+
+
+@app.route("/chart")
+def chart():
     idx, series = load_series()
-    # Ensure regression analysis data is available
     analysis = load_analysis_results()
     return render_template("chart.html", idx=idx, series=series, analysis=analysis)
 

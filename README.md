@@ -24,4 +24,6 @@ Start the Flask app by running:
 python app.py
 ```
 
-The application will start a local development server and open the chart view in your browser.
+The application will start a local development server and open `http://localhost:5000/`,
+which provides links to the available views.  The interactive chart is accessible
+at `http://localhost:5000/chart`.
