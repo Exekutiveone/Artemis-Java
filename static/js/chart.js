@@ -176,6 +176,7 @@ function applyRange() {
     const weatherStyle = w === 'heavy_rain'
       ? " style=\"background-color:#660000;\" title=\"Heavy rain\""
       : "";
+    const weatherStyle = w === 'heavy_rain' ? " style=\"background-color:#660000;\"" : "";
     eventFreq[e] = (eventFreq[e] || 0) + 1;
     manoeuvreFreq[m] = (manoeuvreFreq[m] || 0) + 1;
     tbody.insertAdjacentHTML(

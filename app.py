@@ -3,8 +3,13 @@ from flask import Flask, render_template
 import pandas as pd
 from pathlib import Path
 import os
+import json
+import subprocess
+import sys
 
 CSV_PATH = Path(__file__).resolve().parent / "fahrtanalyse_daten.csv"
+ANALYSIS_JSON = Path(__file__).resolve().parent / "regression_data.json"
+ANALYSIS_SCRIPT = Path(__file__).resolve().parent / "export_regression_data.py"
 
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -30,10 +35,23 @@ def load_series():
         "gps_lon": df["gps_lon"].round(6).tolist(),
     }
 
+
+def load_analysis_results():
+    """Return regression analysis data, generating it if necessary."""
+    if not ANALYSIS_JSON.exists():
+        subprocess.run(
+            [sys.executable, str(ANALYSIS_SCRIPT), str(CSV_PATH), str(ANALYSIS_JSON)],
+            check=True,
+        )
+    with open(ANALYSIS_JSON, "r") as f:
+        return json.load(f)
+
 @app.route("/")
 def index():
     idx, series = load_series()
-    return render_template("chart.html", idx=idx, series=series)
+    # Ensure regression analysis data is available
+    analysis = load_analysis_results()
+    return render_template("chart.html", idx=idx, series=series, analysis=analysis)
 
 if __name__ == "__main__":
     app.run(debug=True)
