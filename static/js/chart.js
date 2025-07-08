@@ -190,5 +190,3 @@ function applyRange() {
     buildOverviewLorenzChart(range);
   }
 }
-
-applyRange();
