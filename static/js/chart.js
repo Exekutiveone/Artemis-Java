@@ -9,6 +9,12 @@ const eventNumericFull = sFull.event.map(e => {
   return null;
 });
 
+const driveStyleColors = {
+  Aggressiv: '#e74c3c',
+  Defensiv: '#2ecc71',
+  Normal: '#3498db'
+};
+
 const chartData = [
   ['speed', 'Geschwindigkeit (m/s)', sFull.speed],
   ['rpm', 'RPM', sFull.rpm],
@@ -75,6 +81,7 @@ function buildChart(id, label, data, range) {
   if (chartRefs[id]) chartRefs[id].destroy();
 
   const sliced = data.slice(range[0], range[1]);
+  const styles = driveStyleData.slice(range[0], range[1]);
   const stats = computeStats(sliced);
 
   document.getElementById(`mean_${id}`).textContent = stats.avg;
@@ -89,15 +96,27 @@ function buildChart(id, label, data, range) {
     type: 'line',
     data: {
       labels: labelsFull.slice(range[0], range[1]),
-      datasets: [{
-        label: label,
-        data: sliced,
-        borderColor: '#1abc9c',
-        borderWidth: 2,
-        pointRadius: 0,
-        tension: 0.15,
-        fill: false
-      }]
+      datasets: [
+        {
+          label: label,
+          data: sliced,
+          borderColor: '#1abc9c',
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.15,
+          fill: false
+        },
+        {
+          type: 'scatter',
+          label: 'Drive Style',
+          data: styles.map((d, i) => ({ x: labelsFull[range[0] + i], y: sliced[i] })),
+          pointBackgroundColor: styles.map(d => driveStyleColors[d.style] || '#ffffff'),
+          pointRadius: 5,
+          pointStyle: 'rectRounded',
+          showLine: false,
+          borderWidth: 0
+        }
+      ]
     },
     options: {
       animation: false,
@@ -117,7 +136,18 @@ function buildChart(id, label, data, range) {
       },
       plugins: {
         legend: { labels: { color: '#f8f9fa' } },
-        title: { display: false }
+        title: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              if (ctx.dataset.label === 'Drive Style') {
+                const d = styles[ctx.dataIndex];
+                return `Fahrstil: ${d.style} – Score: ${d.score}`;
+              }
+              return `${ctx.dataset.label}: ${ctx.formattedValue}`;
+            }
+          }
+        }
       }
     }
   });
