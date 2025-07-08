@@ -55,17 +55,20 @@ def simulate_drive_data(n: int = 1000, seed: int = 42) -> pd.DataFrame:
     terrain_type = rng.choice(terrain_choices, n)
     weather_condition = rng.choice(weather_choices, n)
 
-    # Generate a GPS path that follows the simulated motion data. This creates
-    # smoother transitions so the route can be visualised on a map.
+    # Generate a GPS path that follows the simulated motion data. The previous
+    # implementation picked a random heading at each step, which produced an
+    # erratic route.  We now integrate the steering angle over time so the
+    # vehicle travels along a coherent path.
     gps_lat = np.empty(n)
     gps_lon = np.empty(n)
     gps_lat[0] = 48.775845
     gps_lon[0] = 9.182932
+    heading = 0.0
     for i in range(1, n):
         step = speed[i] * 1e-5 * rng.uniform(0.8, 1.2)
-        angle = rng.uniform(-np.pi, np.pi) + np.radians(steering[i]) / 5
-        gps_lat[i] = gps_lat[i - 1] + step * np.cos(angle)
-        gps_lon[i] = gps_lon[i - 1] + step * np.sin(angle)
+        heading += np.radians(steering[i]) / 5
+        gps_lat[i] = gps_lat[i - 1] + step * np.cos(heading)
+        gps_lon[i] = gps_lon[i - 1] + step * np.sin(heading)
     gps_lat = np.round(gps_lat, 6)
     gps_lon = np.round(gps_lon, 6)
 
