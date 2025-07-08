@@ -38,6 +38,7 @@ function drawTrajectory(data) {
     const y = prev.y + ds * Math.sin(theta);
     points.push({x, y, v, a: accel[i] || 0});
 
+
   const dt = 1; // seconds per sample (assumed)
   const steerFactor = Math.PI / 180 * 0.05; // convert deg -> rad with factor
 
@@ -51,6 +52,8 @@ function drawTrajectory(data) {
     const x = prev.x + ds * Math.cos(theta);
     const y = prev.y + ds * Math.sin(theta);
     points.push({x, y, v: speed[i], a: accel[i] || 0});
+
+
 
   }
 
