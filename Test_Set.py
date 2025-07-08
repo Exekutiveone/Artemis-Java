@@ -50,6 +50,13 @@ def simulate_drive_data(n: int = 1000, seed: int = 42) -> pd.DataFrame:
     event_code = [classify_event(s, a, st, d) for s, a, st, d in zip(speed, accel, steering, distance_front)]
     manoeuvre = [classify_manoeuvre(s, st, a) for s, st, a in zip(speed, steering, accel)]
 
+    terrain_choices = ["indoor", "outdoor", "street", "forest", "field", "trail", "unknown"]
+    weather_choices = ["clear", "rain", "heavy_rain", "wind", "storm", "fog", "snow", "unknown"]
+    terrain_type = rng.choice(terrain_choices, n)
+    weather_condition = rng.choice(weather_choices, n)
+    gps_lat = np.round(48.775845 + rng.normal(0, 0.01, n), 6)
+    gps_lon = np.round(9.182932 + rng.normal(0, 0.01, n), 6)
+
     return pd.DataFrame({
         "speed_m_s": speed,
         "rpm": rpm,
@@ -60,7 +67,11 @@ def simulate_drive_data(n: int = 1000, seed: int = 42) -> pd.DataFrame:
         "battery_pct": battery_pct,
         "distance_front_m": distance_front,
         "event_code": event_code,
-        "manoeuvre": manoeuvre
+        "manoeuvre": manoeuvre,
+        "terrain_type": terrain_type,
+        "weather_condition": weather_condition,
+        "gps_lat": gps_lat,
+        "gps_lon": gps_lon,
     })
 
 if __name__ == "__main__":

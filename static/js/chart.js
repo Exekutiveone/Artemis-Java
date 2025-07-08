@@ -169,9 +169,19 @@ function applyRange() {
   for (let i = start; i < Math.min(end, sFull.event.length); i++) {
     const e = sFull.event[i];
     const m = sFull.manoeuvre[i];
+    const t = sFull.terrain_type[i];
+    const w = sFull.weather_condition[i];
+    const lat = Number(sFull.gps_lat[i]).toFixed(6);
+    const lon = Number(sFull.gps_lon[i]).toFixed(6);
+    const weatherStyle = w === 'heavy_rain'
+      ? " style=\"background-color:#660000;\" title=\"Heavy rain\""
+      : "";
     eventFreq[e] = (eventFreq[e] || 0) + 1;
     manoeuvreFreq[m] = (manoeuvreFreq[m] || 0) + 1;
-    tbody.insertAdjacentHTML("beforeend", `<tr><td>${i}</td><td>${e}</td><td>${m}</td></tr>`);
+    tbody.insertAdjacentHTML(
+      "beforeend",
+      `<tr><td>${i}</td><td>${e}</td><td>${m}</td><td>${t}</td><td${weatherStyle}>${w}</td><td>${lat}</td><td>${lon}</td></tr>`
+    );
   }
 
   buildPieChart("freq_chart", eventFreq);
