@@ -31,6 +31,7 @@ const chartRefs = {};
 const histogramRefs = {};
 const fftRefs = {};
 const aggregateChartRefs = {};
+const sequenceChartRefs = {};
 const MA_WINDOW = 10;
 
 function insertChartBoxes() {
@@ -339,6 +340,35 @@ function buildAggregateChart(id, labels, values) {
   });
 }
 
+
+function buildSequenceChart(id, dataArray) {
+  const ctx = document.getElementById(id).getContext('2d');
+  const categories = Array.from(new Set(dataArray));
+  const mapping = {};
+  categories.forEach((k, i) => { mapping[k] = i; });
+  const numeric = dataArray.map(v => mapping[v]);
+  const labels = labelsFull.map(String);
+  if (sequenceChartRefs[id]) sequenceChartRefs[id].destroy();
+  sequenceChartRefs[id] = new Chart(ctx, {
+    type: 'line',
+    data: { labels: labels, datasets: [{ label: id, data: numeric, stepped: true, borderColor: '#3498db', pointRadius: 0, fill: false }] },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { title: { display: true, text: 'Index', color: '#f8f9fa' }, ticks: { color: '#f8f9fa' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+        y: {
+          ticks: { callback: v => categories[v], color: '#f8f9fa' },
+          grid: { color: 'rgba(255,255,255,0.1)' },
+          title: { display: true, text: 'Kategorie', color: '#f8f9fa' }
+        }
+      },
+      plugins: { legend: { labels: { color: '#f8f9fa' } } }
+    }
+  });
+}
+
+
 function updateAggregateCharts() {
   if (typeof aggregatesData === 'undefined') return;
   const wSel = document.getElementById('weatherSelect');
@@ -347,6 +377,19 @@ function updateAggregateCharts() {
   const tKeys = Array.from(tSel.selectedOptions).map(o => o.value);
   const weatherLabels = wKeys.length ? wKeys : Object.keys(aggregatesData.by_weather);
   const terrainLabels = tKeys.length ? tKeys : Object.keys(aggregatesData.by_terrain);
+
+
+  const weatherPairs = weatherLabels.map(k => [k, aggregatesData.by_weather[k].speed_m_s]);
+  const terrainPairs = terrainLabels.map(k => [k, aggregatesData.by_terrain[k].speed_m_s]);
+  weatherPairs.sort((a, b) => b[1] - a[1]);
+  terrainPairs.sort((a, b) => b[1] - a[1]);
+
+  const sortedWeatherLabels = weatherPairs.map(p => p[0]);
+  const sortedWeatherValues = weatherPairs.map(p => p[1]);
+  const sortedTerrainLabels = terrainPairs.map(p => p[0]);
+  const sortedTerrainValues = terrainPairs.map(p => p[1]);
+  buildAggregateChart('weatherAggChart', sortedWeatherLabels, sortedWeatherValues);
+  buildAggregateChart('terrainAggChart', sortedTerrainLabels, sortedTerrainValues);
   const weatherValues = weatherLabels.map(k => aggregatesData.by_weather[k].speed_m_s);
   const terrainValues = terrainLabels.map(k => aggregatesData.by_terrain[k].speed_m_s);
   buildAggregateChart('weatherAggChart', weatherLabels, weatherValues);
@@ -376,4 +419,6 @@ function initAggregateFilters() {
 
 document.addEventListener('DOMContentLoaded', () => {
   initAggregateFilters();
+  buildSequenceChart('weatherSeqChart', sFull.weather_condition);
+  buildSequenceChart('terrainSeqChart', sFull.terrain_type);
 });
