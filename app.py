@@ -84,6 +84,14 @@ def chart():
     aggregates = load_aggregates()
     return render_template("chart.html", idx=idx, series=series, analysis=analysis, aggregates=aggregates)
 
+@app.route("/terrain")
+def terrain_page():
+    """Separate page showing Wetterdaten charts."""
+    idx, series = load_series()
+    aggregates = load_aggregates()
+    return render_template("terrain.html", idx=idx, series=series, aggregates=aggregates)
+
+
 
 @app.route("/zweidimensionale_analyse.html")
 def zweidimensionale_analyse():
@@ -118,6 +126,7 @@ def regression_pairs_api():
 
 
 
+
 # ---------------------------------------------------------------
 # Terrain map
 # ---------------------------------------------------------------
@@ -132,6 +141,7 @@ def terrain_index():
 def terrain_files(filename):
     """Serve static files for the terrain page."""
     return send_from_directory(os.path.join(app.root_path, "terrain"), filename)
+
 
 @app.route("/api/aggregates")
 def aggregates_api():
