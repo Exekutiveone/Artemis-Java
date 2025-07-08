@@ -173,6 +173,9 @@ function applyRange() {
     const w = sFull.weather_condition[i];
     const lat = Number(sFull.gps_lat[i]).toFixed(6);
     const lon = Number(sFull.gps_lon[i]).toFixed(6);
+    const weatherStyle = w === 'heavy_rain'
+      ? " style=\"background-color:#660000;\" title=\"Heavy rain\""
+      : "";
     const weatherStyle = w === 'heavy_rain' ? " style=\"background-color:#660000;\"" : "";
     eventFreq[e] = (eventFreq[e] || 0) + 1;
     manoeuvreFreq[m] = (manoeuvreFreq[m] || 0) + 1;
