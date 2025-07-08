@@ -85,3 +85,18 @@ function computeFFT(data) {
   }
   return mags.slice(0, Math.floor(n / 2));
 }
+
+
+function computeDominantFreqIndex(data) {
+  const mags = computeFFT(data);
+  let max = -Infinity;
+  let idx = 0;
+  for (let i = 0; i < mags.length; i++) {
+    if (mags[i] > max) {
+      max = mags[i];
+      idx = i;
+    }
+  }
+  return idx;
+}
+

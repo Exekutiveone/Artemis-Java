@@ -55,6 +55,8 @@ function insertChartBoxes() {
           Std-Abw.: <span id="std_${id}">-</span> |
           V-Koeff.: <span id="vcoeff_${id}">-</span><br>
           Gini: <span id="gini_${id}">-</span> |
+          Trend: <span id="trend_${id}">-</span> |
+          Freq-Idx: <span id="freqidx_${id}">-</span>
           Trend: <span id="trend_${id}">-</span>
         </div>
       </div>`;
@@ -101,6 +103,7 @@ function buildChart(id, label, data, range) {
   const styles = driveStyleData.slice(range[0], range[1]);
   const movingAvg = computeMovingAverage(sliced, MA_WINDOW);
   const trend = computeTrend(sliced);
+  const freqIdx = computeDominantFreqIndex(sliced);
   const stats = computeStats(sliced);
 
   document.getElementById(`mean_${id}`).textContent = stats.avg;
@@ -111,6 +114,7 @@ function buildChart(id, label, data, range) {
   document.getElementById(`std_${id}`).textContent = stats.stdDev;
   document.getElementById(`vcoeff_${id}`).textContent = stats.varCoeff;
   document.getElementById(`trend_${id}`).textContent = trend.slope.toFixed(2);
+  document.getElementById(`freqidx_${id}`).textContent = freqIdx;
 
   chartRefs[id] = new Chart(ctx, {
     type: 'line',
@@ -336,6 +340,7 @@ function buildAggregateChart(id, labels, values) {
   });
 }
 
+
 function buildSequenceChart(id, dataArray) {
   const ctx = document.getElementById(id).getContext('2d');
   const categories = Array.from(new Set(dataArray));
@@ -363,6 +368,7 @@ function buildSequenceChart(id, dataArray) {
   });
 }
 
+
 function updateAggregateCharts() {
   if (typeof aggregatesData === 'undefined') return;
   const wSel = document.getElementById('weatherSelect');
@@ -371,6 +377,7 @@ function updateAggregateCharts() {
   const tKeys = Array.from(tSel.selectedOptions).map(o => o.value);
   const weatherLabels = wKeys.length ? wKeys : Object.keys(aggregatesData.by_weather);
   const terrainLabels = tKeys.length ? tKeys : Object.keys(aggregatesData.by_terrain);
+
 
   const weatherPairs = weatherLabels.map(k => [k, aggregatesData.by_weather[k].speed_m_s]);
   const terrainPairs = terrainLabels.map(k => [k, aggregatesData.by_terrain[k].speed_m_s]);
@@ -383,6 +390,10 @@ function updateAggregateCharts() {
   const sortedTerrainValues = terrainPairs.map(p => p[1]);
   buildAggregateChart('weatherAggChart', sortedWeatherLabels, sortedWeatherValues);
   buildAggregateChart('terrainAggChart', sortedTerrainLabels, sortedTerrainValues);
+  const weatherValues = weatherLabels.map(k => aggregatesData.by_weather[k].speed_m_s);
+  const terrainValues = terrainLabels.map(k => aggregatesData.by_terrain[k].speed_m_s);
+  buildAggregateChart('weatherAggChart', weatherLabels, weatherValues);
+  buildAggregateChart('terrainAggChart', terrainLabels, terrainValues);
 }
 
 function initAggregateFilters() {
