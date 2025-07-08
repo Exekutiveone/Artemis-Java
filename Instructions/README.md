@@ -18,6 +18,14 @@ Generate the example dataset with:
 python "Driving Data/Test_Set.py"
 ```
 
+This will create `Data Base/fahrtanalyse_daten.csv` and a separate
+`Data Base/gps_route.csv` containing only the latitude and longitude
+columns. You can also generate the GPS file from any CSV later with:
+
+```bash
+python "Driving Data/export_gps_points.py" Data\ Base/fahrtanalyse_daten.csv
+```
+
 Start the Flask app by running:
 
 ```bash
