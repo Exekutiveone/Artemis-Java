@@ -28,6 +28,7 @@ const chartData = [
 ];
 
 const chartRefs = {};
+const histogramRefs = {};
 const MA_WINDOW = 10;
 
 function insertChartBoxes() {
@@ -40,6 +41,7 @@ function insertChartBoxes() {
       <div class="card p-3">
         <div class="chart-container mb-2"><canvas id="${id}"></canvas></div>
         <div class="chart-container mb-2"><canvas id="lorenz_${id}"></canvas></div>
+        <div class="chart-container mb-2"><canvas id="hist_${id}"></canvas></div>
         <div class="boxplot-container"><canvas id="boxplot_${id}"></canvas></div>
         <div class="stat-box mt-2">
           Mittelwert: <span id="mean_${id}">-</span> |
@@ -49,7 +51,8 @@ function insertChartBoxes() {
           Varianz: <span id="var_${id}">-</span> |
           Std-Abw.: <span id="std_${id}">-</span> |
           V-Koeff.: <span id="vcoeff_${id}">-</span><br>
-          Gini: <span id="gini_${id}">-</span>
+          Gini: <span id="gini_${id}">-</span> |
+          Trend: <span id="trend_${id}">-</span>
         </div>
       </div>`;
     container.appendChild(col);
@@ -75,6 +78,8 @@ function insertChartBoxes() {
     </div>`;
   container.appendChild(lorenz);
 
+  /* FFT charts removed */
+
 }
 
 function buildChart(id, label, data, range) {
@@ -84,6 +89,7 @@ function buildChart(id, label, data, range) {
   const sliced = data.slice(range[0], range[1]);
   const styles = driveStyleData.slice(range[0], range[1]);
   const movingAvg = computeMovingAverage(sliced, MA_WINDOW);
+  const trend = computeTrend(sliced);
   const stats = computeStats(sliced);
 
   document.getElementById(`mean_${id}`).textContent = stats.avg;
@@ -93,6 +99,7 @@ function buildChart(id, label, data, range) {
   document.getElementById(`var_${id}`).textContent = stats.variance;
   document.getElementById(`std_${id}`).textContent = stats.stdDev;
   document.getElementById(`vcoeff_${id}`).textContent = stats.varCoeff;
+  document.getElementById(`trend_${id}`).textContent = trend.slope.toFixed(2);
 
   chartRefs[id] = new Chart(ctx, {
     type: 'line',
@@ -117,6 +124,16 @@ function buildChart(id, label, data, range) {
           tension: 0.15,
           fill: false,
           borderDash: [5, 5]
+        },
+        {
+          label: 'Trendlinie',
+          data: trend.trend,
+          borderColor: '#e67e22',
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.15,
+          fill: false,
+          borderDash: [2, 2]
         },
         {
           type: 'scatter',
@@ -194,13 +211,40 @@ function buildPieChart(id, dataMap) {
   });
 }
 
+function buildHistogram(id, label, data, range) {
+  const ctx = document.getElementById(`hist_${id}`).getContext('2d');
+  if (histogramRefs[id]) histogramRefs[id].destroy();
+  const slice = data.slice(range[0], range[1]);
+  const hist = computeHistogram(slice, 20);
+  histogramRefs[id] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: hist.labels,
+      datasets: [{ label: 'Häufigkeit', data: hist.counts, backgroundColor: '#9b59b6' }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { ticks: { color: '#f8f9fa' }, grid: { color: 'rgba(255,255,255,0.1)' }, title: { display: true, text: label, color: '#f8f9fa' } },
+        y: { ticks: { color: '#f8f9fa' }, grid: { color: 'rgba(255,255,255,0.1)' }, title: { display: true, text: 'Anzahl', color: '#f8f9fa' } }
+      },
+      plugins: { legend: { labels: { color: '#f8f9fa' } } }
+    }
+  });
+}
+
+
 function applyRange() {
   const start = parseInt(document.getElementById('startIdx').value);
   const end = parseInt(document.getElementById('endIdx').value);
   const range = [start, end];
 
   insertChartBoxes();
-  chartData.forEach(([id, label, data]) => buildChart(id, label, data, range));
+  chartData.forEach(([id, label, data]) => {
+    buildChart(id, label, data, range);
+    buildHistogram(id, label, data, range);
+  });
 
   const tbody = document.querySelector("#eventTable tbody");
   tbody.innerHTML = "";
@@ -241,4 +285,6 @@ function applyRange() {
   if (typeof buildOverviewLorenzChart === 'function') {
     buildOverviewLorenzChart(range);
   }
+
+  /* FFT charts removed */
 }
