@@ -54,6 +54,7 @@ function drawTrajectory(data) {
     points.push({x, y, v: speed[i], a: accel[i] || 0});
 
 
+
   }
 
   const xs = points.map(p => p.x);
