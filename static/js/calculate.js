@@ -86,6 +86,7 @@ function computeFFT(data) {
   return mags.slice(0, Math.floor(n / 2));
 }
 
+
 function computeDominantFreqIndex(data) {
   const mags = computeFFT(data);
   let max = -Infinity;
@@ -98,3 +99,4 @@ function computeDominantFreqIndex(data) {
   }
   return idx;
 }
+
