@@ -1,5 +1,10 @@
 import pandas as pd
 import numpy as np
+import os
+import sys
+
+# Ensure imports work when used from outside this directory
+sys.path.insert(0, os.path.dirname(__file__))
 from drive_style_analyzer import LABELS
 
 LABEL_MAP = {
