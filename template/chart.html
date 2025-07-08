@@ -60,6 +60,10 @@
 
     <div class="row mb-4">
       <div class="col-sm-6 col-md-3">
+        <label class="form-label">Wetterauswahl</label>
+        <select id="weatherSelect" class="form-select" multiple></select>
+      </div>
+      <div class="col-sm-6 col-md-3">
         <label class="form-label">Terrainauswahl</label>
         <select id="terrainSelect" class="form-select" multiple></select>
       </div>
@@ -69,6 +73,9 @@
       <h2 class="mb-3">Durchschnittswerte</h2>
       <div class="row">
         <div class="col-12 col-md-6">
+          <canvas id="weatherAggChart"></canvas>
+        </div>
+        <div class="col-12 col-md-6">
           <canvas id="terrainAggChart"></canvas>
         </div>
       </div>
@@ -77,6 +84,12 @@
     <div class="mb-4" id="sequenceSection">
       <h2 class="mb-3">Verlauf des Terrains</h2>
       <div class="row">
+        <div class="col-12 col-md-6">
+      <h2 class="mb-3">Verlauf von Wetter und Terrain</h2>
+      <div class="row">
+        <div class="col-12 col-md-6">
+          <canvas id="weatherSeqChart"></canvas>
+        </div>
         <div class="col-12 col-md-6">
           <canvas id="terrainSeqChart"></canvas>
         </div>
@@ -94,6 +107,17 @@
       </div>
       <div class="col-md-3 d-flex align-items-end">
         <button class="btn btn-outline-light w-100" onclick="applyRange()">Anzeigen</button>
+      </div>
+    </div>
+
+    <div class="row mb-4">
+      <div class="col-sm-6 col-md-3">
+        <label class="form-label">Wetterauswahl</label>
+        <select id="weatherSelect" class="form-select" multiple></select>
+      </div>
+      <div class="col-sm-6 col-md-3">
+        <label class="form-label">Terrainauswahl</label>
+        <select id="terrainSelect" class="form-select" multiple></select>
       </div>
     </div>
 
@@ -116,6 +140,18 @@
       </table>
       <div id="map" class="mt-4">
         <div id="mapCanvas" style="width:100%;height:100%;background:#e0e0e0;"></div>
+      </div>
+    </div>
+
+    <div class="mt-5" id="aggregateSection">
+      <h2 class="mb-3">Durchschnittswerte</h2>
+      <div class="row">
+        <div class="col-12 col-md-6">
+          <canvas id="weatherAggChart"></canvas>
+        </div>
+        <div class="col-12 col-md-6">
+          <canvas id="terrainAggChart"></canvas>
+        </div>
       </div>
     </div>
 

@@ -45,6 +45,7 @@ function insertChartBoxes() {
         <div class="chart-container mb-2"><canvas id="${id}"></canvas></div>
         <div class="chart-container mb-2"><canvas id="hist_${id}"></canvas></div>
         <div class="chart-container mb-2"><canvas id="lorenz_${id}"></canvas></div>
+        <div class="chart-container mb-2"><canvas id="hist_${id}"></canvas></div>
         <div class="boxplot-container"><canvas id="boxplot_${id}"></canvas></div>
         <div class="stat-box mt-2">
           Mittelwert: <span id="mean_${id}">-</span> |
@@ -55,6 +56,8 @@ function insertChartBoxes() {
           Std-Abw.: <span id="std_${id}">-</span> |
           V-Koeff.: <span id="vcoeff_${id}">-</span><br>
           Gini: <span id="gini_${id}">-</span> |
+          Trend: <span id="trend_${id}">-</span> |
+          Freq-Idx: <span id="freqidx_${id}">-</span>
           Trend: <span id="trend_${id}">-</span>
         </div>
       </div>`;
@@ -81,6 +84,7 @@ function insertChartBoxes() {
     </div>`;
   container.appendChild(lorenz);
 
+
   const fft1 = document.createElement("div");
   fft1.className = "col-12 col-md-6";
   fft1.innerHTML = `<div class="card p-3 chart-container"><canvas id="fft_speed"></canvas></div>`;
@@ -101,6 +105,7 @@ function buildChart(id, label, data, range) {
   const styles = driveStyleData.slice(range[0], range[1]);
   const movingAvg = computeMovingAverage(sliced, MA_WINDOW);
   const trend = computeTrend(sliced);
+  const freqIdx = computeDominantFreqIndex(sliced);
   const stats = computeStats(sliced);
 
   document.getElementById(`mean_${id}`).textContent = stats.avg;
@@ -111,6 +116,8 @@ function buildChart(id, label, data, range) {
   document.getElementById(`std_${id}`).textContent = stats.stdDev;
   document.getElementById(`vcoeff_${id}`).textContent = stats.varCoeff;
   document.getElementById(`trend_${id}`).textContent = trend.slope.toFixed(2);
+  document.getElementById(`freqidx_${id}`).textContent = freqIdx;
+
 
   chartRefs[id] = new Chart(ctx, {
     type: 'line',
@@ -245,6 +252,7 @@ function buildHistogram(id, label, data, range) {
   });
 }
 
+
 function buildFFTChart(id, data) {
   const ctx = document.getElementById(id).getContext('2d');
   if (fftRefs[id]) fftRefs[id].destroy();
@@ -262,6 +270,7 @@ function buildFFTChart(id, data) {
     }
   });
 }
+
 
 function applyRange() {
   const start = parseInt(document.getElementById('startIdx').value);
@@ -310,6 +319,7 @@ function applyRange() {
     buildOverviewLorenzChart(range);
   }
 
+
   buildFFTChart('fft_speed', sFull.speed.slice(start, end));
   buildFFTChart('fft_accel', sFull.accel.slice(start, end));
 }
@@ -331,6 +341,7 @@ function buildAggregateChart(id, labels, values) {
     }
   });
 }
+
 
 function buildSequenceChart(id, dataArray) {
   const ctx = document.getElementById(id).getContext('2d');
@@ -359,6 +370,7 @@ function buildSequenceChart(id, dataArray) {
   });
 }
 
+
 function updateAggregateCharts() {
   if (typeof aggregatesData === 'undefined') return;
   const tSel = document.getElementById('terrainSelect');
@@ -371,22 +383,61 @@ function updateAggregateCharts() {
   const sortedTerrainLabels = terrainPairs.map(p => p[0]);
   const sortedTerrainValues = terrainPairs.map(p => p[1]);
   buildAggregateChart('terrainAggChart', sortedTerrainLabels, sortedTerrainValues);
+
+
+function updateAggregateCharts() {
+  if (typeof aggregatesData === 'undefined') return;
+  const wSel = document.getElementById('weatherSelect');
+  const tSel = document.getElementById('terrainSelect');
+  const wKeys = Array.from(wSel.selectedOptions).map(o => o.value);
+  const tKeys = Array.from(tSel.selectedOptions).map(o => o.value);
+  const weatherLabels = wKeys.length ? wKeys : Object.keys(aggregatesData.by_weather);
+  const terrainLabels = tKeys.length ? tKeys : Object.keys(aggregatesData.by_terrain);
+
+
+  const weatherPairs = weatherLabels.map(k => [k, aggregatesData.by_weather[k].speed_m_s]);
+  const terrainPairs = terrainLabels.map(k => [k, aggregatesData.by_terrain[k].speed_m_s]);
+  weatherPairs.sort((a, b) => b[1] - a[1]);
+  terrainPairs.sort((a, b) => b[1] - a[1]);
+
+  const sortedWeatherLabels = weatherPairs.map(p => p[0]);
+  const sortedWeatherValues = weatherPairs.map(p => p[1]);
+  const sortedTerrainLabels = terrainPairs.map(p => p[0]);
+  const sortedTerrainValues = terrainPairs.map(p => p[1]);
+  buildAggregateChart('weatherAggChart', sortedWeatherLabels, sortedWeatherValues);
+  buildAggregateChart('terrainAggChart', sortedTerrainLabels, sortedTerrainValues);
+  const weatherValues = weatherLabels.map(k => aggregatesData.by_weather[k].speed_m_s);
+  const terrainValues = terrainLabels.map(k => aggregatesData.by_terrain[k].speed_m_s);
+  buildAggregateChart('weatherAggChart', weatherLabels, weatherValues);
+  buildAggregateChart('terrainAggChart', terrainLabels, terrainValues);
+
 }
 
 function initAggregateFilters() {
   if (typeof aggregatesData === 'undefined') return;
   const tSel = document.getElementById('terrainSelect');
+  const wSel = document.getElementById('weatherSelect');
+  const tSel = document.getElementById('terrainSelect');
+  Object.keys(aggregatesData.by_weather).forEach(k => {
+    const opt = document.createElement('option');
+    opt.value = k;
+    opt.textContent = k;
+    wSel.appendChild(opt);
+  });
   Object.keys(aggregatesData.by_terrain).forEach(k => {
     const opt = document.createElement('option');
     opt.value = k;
     opt.textContent = k;
     tSel.appendChild(opt);
   });
+
+  wSel.addEventListener('change', updateAggregateCharts);
   tSel.addEventListener('change', updateAggregateCharts);
   updateAggregateCharts();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   initAggregateFilters();
+  buildSequenceChart('weatherSeqChart', sFull.weather_condition);
   buildSequenceChart('terrainSeqChart', sFull.terrain_type);
 });
