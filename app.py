@@ -110,6 +110,13 @@ def drive_style_api():
     return jsonify(data)
 
 
+@app.route("/api/series")
+def series_api():
+    """Return full time series data as JSON."""
+    idx, series = load_series()
+    return jsonify({"idx": idx, "series": series})
+
+
 @app.route("/api/regression_pairs")
 def regression_pairs_api():
     """Return regression analysis pairs as JSON."""
@@ -138,6 +145,22 @@ def aggregates_api():
     """Return aggregated metrics by weather and terrain."""
     data = load_aggregates()
     return jsonify(data)
+
+
+# ---------------------------------------------------------------
+# Trajectory visualisation
+# ---------------------------------------------------------------
+
+@app.route("/trajectory/")
+def trajectory_index():
+    """Serve the trajectory visualisation page."""
+    return send_from_directory(os.path.join(app.root_path, "trajectory"), "index.html")
+
+
+@app.route("/trajectory/<path:filename>")
+def trajectory_files(filename):
+    """Serve static files for the trajectory page."""
+    return send_from_directory(os.path.join(app.root_path, "trajectory"), filename)
 
 if __name__ == "__main__":
     app.run(debug=True)
