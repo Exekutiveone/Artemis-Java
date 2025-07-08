@@ -156,6 +156,10 @@ function applyRange() {
 
   buildPieChart("freq_chart", eventFreq);
   buildPieChart("manoeuvre_chart", manoeuvreFreq);
+
+  if (typeof buildBoxplot === 'function') {
+    buildBoxplot(range);
+  }
 }
 
 applyRange();
