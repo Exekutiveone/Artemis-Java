@@ -45,6 +45,7 @@ function insertChartBoxes() {
         <div class="chart-container mb-2"><canvas id="${id}"></canvas></div>
         <div class="chart-container mb-2"><canvas id="hist_${id}"></canvas></div>
         <div class="chart-container mb-2"><canvas id="lorenz_${id}"></canvas></div>
+        <div class="chart-container mb-2"><canvas id="hist_${id}"></canvas></div>
         <div class="boxplot-container"><canvas id="boxplot_${id}"></canvas></div>
         <div class="stat-box mt-2">
           Mittelwert: <span id="mean_${id}">-</span> |
