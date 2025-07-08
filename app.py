@@ -3,11 +3,18 @@ from flask import Flask, render_template, send_from_directory, jsonify
 import pandas as pd
 from pathlib import Path
 import os
+import sys
+
+# Allow imports from the "Driving Data" folder
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "Driving Data"))
+
 from analysis_utils import compute_regression_pairs, compute_drive_style_series
 
-CSV_PATH = Path(__file__).resolve().parent / "fahrtanalyse_daten.csv"
+# CSV data is stored inside the "Data Base" directory
+CSV_PATH = Path(__file__).resolve().parent / "Data Base" / "fahrtanalyse_daten.csv"
 
-app = Flask(__name__)
+# Templates are stored in the "template" directory
+app = Flask(__name__, template_folder="template")
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # Verhindert Browser-Caching statischer Dateien
 
@@ -51,19 +58,19 @@ def chart():
 @app.route("/zweidimensionale_analyse.html")
 def zweidimensionale_analyse():
     """Serve the zweidimensionale Analyse page."""
-    return send_from_directory(app.root_path, "zweidimensionale_analyse.html")
+    return send_from_directory(os.path.join(app.root_path, "Driving Analysis"), "zweidimensionale_analyse.html")
 
 
 @app.route("/analyse/drive_style.html")
 def drive_style_html():
     """Serve the drive style analysis page."""
-    return send_from_directory(os.path.join(app.root_path, "analyse"), "drive_style.html")
+    return send_from_directory(os.path.join(app.root_path, "Driving Analysis"), "drive_style.html")
 
 
 @app.route("/analyse/drive_style.js")
 def drive_style_js():
     """Serve the drive style script."""
-    return send_from_directory(os.path.join(app.root_path, "analyse"), "drive_style.js")
+    return send_from_directory(os.path.join(app.root_path, "static/js"), "drive_style_analysis.js")
 
 
 @app.route("/api/drive_style")

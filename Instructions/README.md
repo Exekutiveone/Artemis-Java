@@ -7,7 +7,7 @@ This project contains a small Flask application and supporting scripts for analy
 Use pip to install the required dependencies:
 
 ```bash
-pip install -r requirements.txt
+pip install -r Instructions/requirements.txt
 ```
 
 ## Usage
@@ -15,7 +15,7 @@ pip install -r requirements.txt
 Generate the example dataset with:
 
 ```bash
-python Test_Set.py
+python "Driving Data/Test_Set.py"
 ```
 
 Start the Flask app by running:
