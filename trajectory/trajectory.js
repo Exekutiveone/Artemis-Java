@@ -37,6 +37,23 @@ function drawTrajectory(data) {
     const x = prev.x + ds * Math.cos(theta);
     const y = prev.y + ds * Math.sin(theta);
     points.push({x, y, v, a: accel[i] || 0});
+
+
+  const dt = 1; // seconds per sample (assumed)
+  const steerFactor = Math.PI / 180 * 0.05; // convert deg -> rad with factor
+
+  const points = [{x:0, y:0, v:speed[0], a:accel[0]||0}];
+  let theta = 0;
+  for (let i = 0; i < speed.length; i++) {
+    const ds = speed[i] * dt;
+    const dtheta = steering[i] * steerFactor;
+    theta += dtheta;
+    const prev = points[points.length - 1];
+    const x = prev.x + ds * Math.cos(theta);
+    const y = prev.y + ds * Math.sin(theta);
+    points.push({x, y, v: speed[i], a: accel[i] || 0});
+
+
   }
 
   const xs = points.map(p => p.x);
