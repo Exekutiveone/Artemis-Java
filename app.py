@@ -79,5 +79,12 @@ def drive_style_api():
     data = compute_drive_style_series(str(CSV_PATH))
     return jsonify(data)
 
+
+@app.route("/api/regression_pairs")
+def regression_pairs_api():
+    """Return regression analysis pairs as JSON."""
+    data = load_analysis_results()
+    return jsonify(data)
+
 if __name__ == "__main__":
     app.run(debug=True)
