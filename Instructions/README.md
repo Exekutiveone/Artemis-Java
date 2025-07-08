@@ -18,6 +18,15 @@ Generate the example dataset with:
 python "Driving Data/Test_Set.py"
 ```
 
+This will create `Data Base/fahrtanalyse_daten.csv` and a separate
+`Data Base/gps_route.csv` containing only the latitude and longitude
+columns. The chart page now loads a base map even if no GPS data is
+present. You can generate the GPS file from any CSV later with:
+
+```bash
+python "Driving Data/export_gps_points.py" Data\ Base/fahrtanalyse_daten.csv
+```
+
 Start the Flask app by running:
 
 ```bash
@@ -29,3 +38,8 @@ which provides links to the available views.  The interactive chart is accessibl
 at `http://localhost:5000/chart` and now displays the GPS route on an interactive
 Leaflet map.  Additional analysis pages are served at
 `/zweidimensionale_analyse.html` and `/analyse/drive_style.html`.
+
+### Terrain map preview
+
+A bare interactive map is available at `http://localhost:5000/terrain/`.  It
+shows a Leaflet base map and will later be used to visualise the recorded routes.
