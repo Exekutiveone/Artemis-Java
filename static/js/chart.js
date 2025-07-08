@@ -293,17 +293,13 @@ function applyRange() {
     const e = sFull.event[i];
     const m = sFull.manoeuvre[i];
     const t = sFull.terrain_type[i];
-    const w = sFull.weather_condition[i];
     const lat = Number(sFull.gps_lat[i]).toFixed(6);
     const lon = Number(sFull.gps_lon[i]).toFixed(6);
-    const weatherStyle = w === 'heavy_rain'
-      ? " style=\"background-color:#660000;\" title=\"Heavy rain\""
-      : "";
     eventFreq[e] = (eventFreq[e] || 0) + 1;
     manoeuvreFreq[m] = (manoeuvreFreq[m] || 0) + 1;
     tbody.insertAdjacentHTML(
       "beforeend",
-      `<tr><td>${i}</td><td>${e}</td><td>${m}</td><td>${t}</td><td${weatherStyle}>${w}</td><td>${lat}</td><td>${lon}</td></tr>`
+      `<tr><td>${i}</td><td>${e}</td><td>${m}</td><td>${t}</td><td>${lat}</td><td>${lon}</td></tr>`
     );
   }
 
@@ -377,6 +373,20 @@ function buildSequenceChart(id, dataArray) {
 
 function updateAggregateCharts() {
   if (typeof aggregatesData === 'undefined') return;
+  const tSel = document.getElementById('terrainSelect');
+  const tKeys = Array.from(tSel.selectedOptions).map(o => o.value);
+  const terrainLabels = tKeys.length ? tKeys : Object.keys(aggregatesData.by_terrain);
+
+  const terrainPairs = terrainLabels.map(k => [k, aggregatesData.by_terrain[k].speed_m_s]);
+  terrainPairs.sort((a, b) => b[1] - a[1]);
+
+  const sortedTerrainLabels = terrainPairs.map(p => p[0]);
+  const sortedTerrainValues = terrainPairs.map(p => p[1]);
+  buildAggregateChart('terrainAggChart', sortedTerrainLabels, sortedTerrainValues);
+
+
+function updateAggregateCharts() {
+  if (typeof aggregatesData === 'undefined') return;
   const wSel = document.getElementById('weatherSelect');
   const tSel = document.getElementById('terrainSelect');
   const wKeys = Array.from(wSel.selectedOptions).map(o => o.value);
@@ -400,10 +410,12 @@ function updateAggregateCharts() {
   const terrainValues = terrainLabels.map(k => aggregatesData.by_terrain[k].speed_m_s);
   buildAggregateChart('weatherAggChart', weatherLabels, weatherValues);
   buildAggregateChart('terrainAggChart', terrainLabels, terrainValues);
+
 }
 
 function initAggregateFilters() {
   if (typeof aggregatesData === 'undefined') return;
+  const tSel = document.getElementById('terrainSelect');
   const wSel = document.getElementById('weatherSelect');
   const tSel = document.getElementById('terrainSelect');
   Object.keys(aggregatesData.by_weather).forEach(k => {
@@ -418,6 +430,7 @@ function initAggregateFilters() {
     opt.textContent = k;
     tSel.appendChild(opt);
   });
+
   wSel.addEventListener('change', updateAggregateCharts);
   tSel.addEventListener('change', updateAggregateCharts);
   updateAggregateCharts();
