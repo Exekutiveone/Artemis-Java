@@ -54,8 +54,20 @@ def simulate_drive_data(n: int = 1000, seed: int = 42) -> pd.DataFrame:
     weather_choices = ["clear", "rain", "heavy_rain", "wind", "storm", "fog", "snow", "unknown"]
     terrain_type = rng.choice(terrain_choices, n)
     weather_condition = rng.choice(weather_choices, n)
-    gps_lat = np.round(48.775845 + rng.normal(0, 0.01, n), 6)
-    gps_lon = np.round(9.182932 + rng.normal(0, 0.01, n), 6)
+
+    # Generate a GPS path that follows the simulated motion data. This creates
+    # smoother transitions so the route can be visualised on a map.
+    gps_lat = np.empty(n)
+    gps_lon = np.empty(n)
+    gps_lat[0] = 48.775845
+    gps_lon[0] = 9.182932
+    for i in range(1, n):
+        step = speed[i] * 1e-5 * rng.uniform(0.8, 1.2)
+        angle = rng.uniform(-np.pi, np.pi) + np.radians(steering[i]) / 5
+        gps_lat[i] = gps_lat[i - 1] + step * np.cos(angle)
+        gps_lon[i] = gps_lon[i - 1] + step * np.sin(angle)
+    gps_lat = np.round(gps_lat, 6)
+    gps_lon = np.round(gps_lon, 6)
 
     return pd.DataFrame({
         "speed_m_s": speed,
@@ -76,6 +88,13 @@ def simulate_drive_data(n: int = 1000, seed: int = 42) -> pd.DataFrame:
 
 if __name__ == "__main__":
     df = simulate_drive_data()
-    path = Path(__file__).resolve().parent.parent / "Data Base" / "fahrtanalyse_daten.csv"
-    df.to_csv(path, index=False)
-    print(f"CSV geschrieben: {path.resolve()}")
+    base_dir = Path(__file__).resolve().parent.parent / "Data Base"
+    data_path = base_dir / "fahrtanalyse_daten.csv"
+    df.to_csv(data_path, index=False)
+
+    # Export GPS points separately for easy use with mapping tools
+    gps_path = base_dir / "gps_route.csv"
+    df[["gps_lat", "gps_lon"]].to_csv(gps_path, index=False)
+
+    print(f"CSV geschrieben: {data_path.resolve()}")
+    print(f"GPS CSV geschrieben: {gps_path.resolve()}")
