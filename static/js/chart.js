@@ -58,6 +58,16 @@ function insertChartBoxes() {
   pie2.innerHTML = `<div class="card p-3 chart-container"><canvas id="manoeuvre_chart"></canvas></div>`;
   container.appendChild(pie2);
 
+
+  const lorenz = document.createElement("div");
+  lorenz.className = "col-12";
+  lorenz.innerHTML = `
+    <div class="card p-3">
+      <div class="chart-container"><canvas id="lorenz_chart"></canvas></div>
+      <div class="stat-box mt-2">Gini-Koeffizient: <span id="gini_coef">-</span></div>
+    </div>`;
+  container.appendChild(lorenz);
+
 }
 
 function buildChart(id, label, data, range) {
@@ -171,8 +181,13 @@ function applyRange() {
     buildBoxplot(range);
   }
 
+
   if (typeof buildAllLorenz === 'function') {
     buildAllLorenz(range);
+
+  if (typeof buildLorenzChart === 'function') {
+    buildLorenzChart(range);
+
   }
 }
 

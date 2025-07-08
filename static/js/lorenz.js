@@ -1,9 +1,16 @@
 'use strict';
 
+
 const lorenzRefs = {};
 
 function computeLorenz(data) {
   const sorted = [...data].map(v => Math.abs(v)).sort((a, b) => a - b);
+
+let lorenzRef;
+
+function computeLorenz(data) {
+  const sorted = [...data].sort((a, b) => a - b);
+
   const n = sorted.length;
   const cum = [0];
   for (let i = 0; i < n; i++) {
@@ -24,6 +31,7 @@ function computeLorenz(data) {
   return { xs, ys, gini };
 }
 
+
 function buildLorenzChart(id, label, data, range) {
   const ctx = document.getElementById(`lorenz_${id}`).getContext('2d');
   if (lorenzRefs[id]) lorenzRefs[id].destroy();
@@ -32,11 +40,24 @@ function buildLorenzChart(id, label, data, range) {
   const giniEl = document.getElementById(`gini_${id}`);
   if (giniEl) giniEl.textContent = gini;
   lorenzRefs[id] = new Chart(ctx, {
+
+function buildLorenzChart(range) {
+  const ctx = document.getElementById('lorenz_chart').getContext('2d');
+  if (lorenzRef) lorenzRef.destroy();
+  const slice = sFull.speed.slice(range[0], range[1]);
+  const { xs, ys, gini } = computeLorenz(slice);
+  document.getElementById('gini_coef').textContent = gini;
+  lorenzRef = new Chart(ctx, {
+
     type: 'line',
     data: {
       labels: xs,
       datasets: [{
+
         label: `Lorenzkurve (${label})`,
+
+        label: 'Lorenzkurve (Geschwindigkeit)',
+
         data: ys,
         borderColor: '#e67e22',
         borderWidth: 2,
@@ -67,6 +88,7 @@ function buildLorenzChart(id, label, data, range) {
   });
 }
 
+
 function buildAllLorenz(range) {
   chartData.forEach(([id, label, data]) => {
     const canvas = document.getElementById(`lorenz_${id}`);
@@ -74,3 +96,4 @@ function buildAllLorenz(range) {
     buildLorenzChart(id, label, data, range);
   });
 }
+
