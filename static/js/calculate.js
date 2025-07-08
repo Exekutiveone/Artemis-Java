@@ -70,6 +70,7 @@ function computeTrend(data) {
   return { slope, intercept, trend };
 }
 
+
 function computeFFT(data) {
   const n = data.length;
   const mags = [];
@@ -98,3 +99,4 @@ function computeDominantFreqIndex(data) {
   }
   return idx;
 }
+

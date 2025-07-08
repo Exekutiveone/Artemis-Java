@@ -84,6 +84,7 @@ function insertChartBoxes() {
     </div>`;
   container.appendChild(lorenz);
 
+
   const fft1 = document.createElement("div");
   fft1.className = "col-12 col-md-6";
   fft1.innerHTML = `<div class="card p-3 chart-container"><canvas id="fft_speed"></canvas></div>`;
@@ -116,6 +117,7 @@ function buildChart(id, label, data, range) {
   document.getElementById(`vcoeff_${id}`).textContent = stats.varCoeff;
   document.getElementById(`trend_${id}`).textContent = trend.slope.toFixed(2);
   document.getElementById(`freqidx_${id}`).textContent = freqIdx;
+
 
   chartRefs[id] = new Chart(ctx, {
     type: 'line',
@@ -250,6 +252,7 @@ function buildHistogram(id, label, data, range) {
   });
 }
 
+
 function buildFFTChart(id, data) {
   const ctx = document.getElementById(id).getContext('2d');
   if (fftRefs[id]) fftRefs[id].destroy();
@@ -267,6 +270,7 @@ function buildFFTChart(id, data) {
     }
   });
 }
+
 
 function applyRange() {
   const start = parseInt(document.getElementById('startIdx').value);
@@ -318,6 +322,7 @@ function applyRange() {
   if (typeof buildOverviewLorenzChart === 'function') {
     buildOverviewLorenzChart(range);
   }
+
 
   buildFFTChart('fft_speed', sFull.speed.slice(start, end));
   buildFFTChart('fft_accel', sFull.accel.slice(start, end));
