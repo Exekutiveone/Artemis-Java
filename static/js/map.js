@@ -6,15 +6,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const lats = sFull.gps_lat || [];
   const lons = sFull.gps_lon || [];
-  if (!lats.length || !lons.length) return;
-
-  const coords = lats.map((lat, i) => [lat, lons[i]]);
 
   const map = L.map('mapCanvas');
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '© OpenStreetMap contributors'
   }).addTo(map);
+
+  if (!lats.length || !lons.length) {
+    map.setView([0, 0], 2);
+    const msg = L.control({ position: 'topright' });
+    msg.onAdd = function () {
+      const div = L.DomUtil.create('div', 'gps-warning');
+      div.innerHTML = '<span style="background:#fff;color:#000;padding:4px 8px;border-radius:4px;">Keine GPS-Daten verfügbar</span>';
+      return div;
+    };
+    msg.addTo(map);
+    return;
+  }
+
+  const coords = lats.map((lat, i) => [lat, lons[i]]);
 
   const polyline = L.polyline(coords, { color: 'orange' }).addTo(map);
 

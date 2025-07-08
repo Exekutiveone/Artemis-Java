@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "Driving Data"))
 
 from analysis_utils import compute_regression_pairs, compute_drive_style_series
 
+
 # CSV data is stored inside the "Data Base" directory
 CSV_PATH = Path(__file__).resolve().parent / "Data Base" / "fahrtanalyse_daten.csv"
 
@@ -39,6 +40,34 @@ def load_series():
     }
 
 
+def load_aggregates():
+    """Compute average metrics grouped by weather condition and terrain type."""
+    df = pd.read_csv(CSV_PATH)
+    numeric = [
+        "speed_m_s",
+        "rpm",
+        "steering_deg",
+        "distance_m",
+        "accel_m_s2",
+        "lateral_acc_m_s2",
+        "battery_pct",
+        "distance_front_m",
+    ]
+    by_weather = (
+        df.groupby("weather_condition")[numeric]
+        .mean()
+        .round(2)
+        .to_dict(orient="index")
+    )
+    by_terrain = (
+        df.groupby("terrain_type")[numeric]
+        .mean()
+        .round(2)
+        .to_dict(orient="index")
+    )
+    return {"by_weather": by_weather, "by_terrain": by_terrain}
+
+
 def load_analysis_results():
     """Return regression analysis data computed from the CSV."""
     return compute_regression_pairs(str(CSV_PATH))
@@ -52,7 +81,8 @@ def index():
 def chart():
     idx, series = load_series()
     analysis = load_analysis_results()
-    return render_template("chart.html", idx=idx, series=series, analysis=analysis)
+    aggregates = load_aggregates()
+    return render_template("chart.html", idx=idx, series=series, analysis=analysis, aggregates=aggregates)
 
 
 @app.route("/zweidimensionale_analyse.html")
@@ -84,6 +114,29 @@ def drive_style_api():
 def regression_pairs_api():
     """Return regression analysis pairs as JSON."""
     data = load_analysis_results()
+    return jsonify(data)
+
+
+
+# ---------------------------------------------------------------
+# Terrain map
+# ---------------------------------------------------------------
+
+@app.route("/terrain/")
+def terrain_index():
+    """Serve the basic interactive map."""
+    return send_from_directory(os.path.join(app.root_path, "terrain"), "index.html")
+
+
+@app.route("/terrain/<path:filename>")
+def terrain_files(filename):
+    """Serve static files for the terrain page."""
+    return send_from_directory(os.path.join(app.root_path, "terrain"), filename)
+
+@app.route("/api/aggregates")
+def aggregates_api():
+    """Return aggregated metrics by weather and terrain."""
+    data = load_aggregates()
     return jsonify(data)
 
 if __name__ == "__main__":
