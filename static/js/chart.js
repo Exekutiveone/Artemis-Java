@@ -37,7 +37,8 @@ function insertChartBoxes() {
           Spannweite: <span id="range_${id}">-</span> |
           IQA: <span id="iqr_${id}">-</span>
         </div>
-        <div class="chart-container"><canvas id="${id}"></canvas></div>
+        <div class="chart-container mb-2"><canvas id="${id}"></canvas></div>
+        <div class="boxplot-container"><canvas id="boxplot_${id}"></canvas></div>
       </div>`;
     container.appendChild(col);
   }
