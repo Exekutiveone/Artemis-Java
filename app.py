@@ -117,6 +117,22 @@ def regression_pairs_api():
     return jsonify(data)
 
 
+
+# ---------------------------------------------------------------
+# Terrain map
+# ---------------------------------------------------------------
+
+@app.route("/terrain/")
+def terrain_index():
+    """Serve the basic interactive map."""
+    return send_from_directory(os.path.join(app.root_path, "terrain"), "index.html")
+
+
+@app.route("/terrain/<path:filename>")
+def terrain_files(filename):
+    """Serve static files for the terrain page."""
+    return send_from_directory(os.path.join(app.root_path, "terrain"), filename)
+
 @app.route("/api/aggregates")
 def aggregates_api():
     """Return aggregated metrics by weather and terrain."""
