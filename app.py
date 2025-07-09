@@ -178,5 +178,28 @@ def trajectory_files(filename):
     return send_from_directory(os.path.join(app.root_path, "trajectory"), filename)
 
 
+@app.route('/api/series')
+def api_series():
+    try:
+        limit = int(request.args.get('limit', 1000))
+        full_df = simulate_drive_data(n=10000)
+        if limit < len(full_df):
+            indices = np.linspace(0, len(full_df) - 1, limit, dtype=int)
+            df = full_df.iloc[indices]
+        else:
+            df = full_df
+        return jsonify({
+            "series": {
+                "speed": df["speed_m_s"].tolist(),
+                "steering": df["steering_deg"].tolist(),
+                "accel": df["accel_m_s2"].tolist(),
+            }
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
+
 if __name__ == "__main__":
     app.run(debug=True)
