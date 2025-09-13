@@ -23,6 +23,7 @@ import com.example.artemis.dao.DriveDataDao;
 import com.example.artemis.model.Asset;
 import com.example.artemis.model.Route;
 import com.example.artemis.model.Mission;
+import com.example.artemis.model.Asset;
 
 @Controller
 public class WebController {
@@ -120,6 +121,19 @@ public class WebController {
     }
 
     // --- New SQLite-backed endpoints ---
+
+
+    /**
+     * Returns all assets stored in the SQLite database.
+     */
+    @ResponseBody
+    @GetMapping("/api/assets")
+    public List<Asset> assets() {
+        return new AssetDao().findAll();
+    }
+
+    private Map<String, Object> loadCsvData() throws IOException {
+        Path csvPath = Paths.get("Data Base", "fahrtanalyse_daten.csv");
 
     /**
      * Returns all assets stored in the SQLite database.

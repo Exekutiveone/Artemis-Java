@@ -46,6 +46,7 @@ CREATE TABLE asset_routes (
     PRIMARY KEY (asset_id, route_id)
 );
 
+
 CREATE TABLE drive_data (
     idx INTEGER PRIMARY KEY,
     speed REAL,
@@ -68,6 +69,7 @@ INSERT INTO drive_data (idx, speed, rpm, steering, distance, accel, lateral_acc,
 (0, 0, 800, 0, 0, 0, 0, 100, 10, 'start', 'idle', 'road', 'sunny', 48.0, 11.0),
 (1, 5, 1000, 0.1, 5, 0.2, 0.05, 99, 9.5, '', 'drive', 'road', 'sunny', 48.0001, 11.0001),
 (2, 10, 1100, 0.15, 10, 0.3, 0.07, 98, 9.0, '', 'drive', 'road', 'sunny', 48.0002, 11.0002);
+
 
 CREATE VIEW view_asset_summary AS
 SELECT a.id,
