@@ -30,8 +30,8 @@ h1 {
 }
 
 @keyframes fadeInDown {
-  from {opacity: 0; transform: translateY(-20px);} 
-  to {opacity: 1; transform: translateY(0);} 
+  from {opacity: 0; transform: translateY(-20px);}
+  to {opacity: 1; transform: translateY(0);}
 }
 
 .list-group {
@@ -41,6 +41,6 @@ h1 {
 }
 
 @keyframes fadeInUp {
-  from {opacity: 0; transform: translateY(20px);} 
-  to {opacity: 1; transform: translateY(0);} 
+  from {opacity: 0; transform: translateY(20px);}
+  to {opacity: 1; transform: translateY(0);}
 }
