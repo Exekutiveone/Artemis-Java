@@ -22,9 +22,8 @@ public class WebController {
 
     // Startseite -> Template (index.html)
     @GetMapping("/")
-    public String index(Model model) {
-        model.addAttribute("title", "Artemis Java");
-        return "index"; // sucht templates/index.html
+    public String index() {
+        return "index"; // liefert die React-Startseite
     }
 
     // Beispiel-API Endpoint -> JSON
