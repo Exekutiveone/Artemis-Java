@@ -46,6 +46,17 @@ public class WebController {
         return "chart"; // sucht templates/chart.html
     }
 
+    @GetMapping({"/trajectory", "/trajectory/"})
+    public String trajectory() {
+        return "trajectory";
+    }
+
+    @ResponseBody
+    @GetMapping("/api/series")
+    public Map<String, Object> series() throws IOException {
+        return loadCsvData();
+    }
+
     @ResponseBody
     @GetMapping("/api/drive_style")
     public List<Map<String, Object>> driveStyle() throws IOException {
