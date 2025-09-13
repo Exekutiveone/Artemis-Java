@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.artemis.dao.AssetDao;
+import com.example.artemis.model.Asset;
 
 @Controller
 public class WebController {
@@ -105,6 +107,17 @@ public class WebController {
         try (BufferedReader br = Files.newBufferedReader(jsonPath)) {
             return mapper.readValue(br, Map.class);
         }
+    }
+
+    // --- New SQLite-backed endpoints ---
+
+    /**
+     * Returns all assets stored in the SQLite database.
+     */
+    @ResponseBody
+    @GetMapping("/api/assets")
+    public List<Asset> assets() {
+        return new AssetDao().findAll();
     }
 
     private Map<String, Object> loadCsvData() throws IOException {
