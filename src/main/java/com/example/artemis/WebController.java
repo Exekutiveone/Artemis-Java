@@ -16,6 +16,13 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.artemis.dao.AssetDao;
+import com.example.artemis.dao.RouteDao;
+import com.example.artemis.dao.MissionDao;
+import com.example.artemis.dao.DriveDataDao;
+import com.example.artemis.model.Asset;
+import com.example.artemis.model.Route;
+import com.example.artemis.model.Mission;
 
 @Controller
 public class WebController {
@@ -24,6 +31,11 @@ public class WebController {
     @GetMapping("/")
     public String index() {
         return "index"; // liefert die React-Startseite
+    }
+
+    @GetMapping("/data")
+    public String dataPage() {
+        return "data";
     }
 
     // Beispiel-API Endpoint -> JSON
@@ -38,10 +50,10 @@ public class WebController {
 
     // Neue Seite -> Template (chart.html)
     @GetMapping("/chart")
-    public String chart(Model model) throws IOException {
+    public String chart(Model model) {
         model.addAttribute("title", "Chart Page");
 
-        Map<String, Object> data = loadCsvData();
+        Map<String, Object> data = loadDbData();
         model.addAttribute("idx", data.get("idx"));
         model.addAttribute("series", data.get("series"));
 
@@ -55,8 +67,8 @@ public class WebController {
 
     @ResponseBody
     @GetMapping("/api/series")
-    public Map<String, Object> series() throws IOException {
-        return loadCsvData();
+    public Map<String, Object> series() {
+        return loadDbData();
     }
 
     @ResponseBody
@@ -107,70 +119,30 @@ public class WebController {
         }
     }
 
-    private Map<String, Object> loadCsvData() throws IOException {
-        Path csvPath = Paths.get("Data Base", "fahrtanalyse_daten.csv");
+    // --- New SQLite-backed endpoints ---
 
-        List<Integer> idx = new ArrayList<>();
-        List<Double> speed = new ArrayList<>();
-        List<Double> rpm = new ArrayList<>();
-        List<Double> steering = new ArrayList<>();
-        List<Double> distance = new ArrayList<>();
-        List<Double> accel = new ArrayList<>();
-        List<Double> lateralAcc = new ArrayList<>();
-        List<Double> battery = new ArrayList<>();
-        List<Double> distanceFront = new ArrayList<>();
-        List<String> event = new ArrayList<>();
-        List<String> manoeuvre = new ArrayList<>();
-        List<String> terrain = new ArrayList<>();
-        List<String> weather = new ArrayList<>();
-        List<Double> gpsLat = new ArrayList<>();
-        List<Double> gpsLon = new ArrayList<>();
+    /**
+     * Returns all assets stored in the SQLite database.
+     */
+    @ResponseBody
+    @GetMapping("/api/assets")
+    public List<Asset> assets() {
+        return new AssetDao().findAll();
+    }
 
-        try (BufferedReader br = Files.newBufferedReader(csvPath)) {
-            String line = br.readLine(); // header
-            int i = 0;
-            while ((line = br.readLine()) != null) {
-                String[] p = line.split(",");
-                if (p.length < 14) continue;
-                speed.add(Double.parseDouble(p[0]));
-                rpm.add(Double.parseDouble(p[1]));
-                steering.add(Double.parseDouble(p[2]));
-                distance.add(Double.parseDouble(p[3]));
-                accel.add(Double.parseDouble(p[4]));
-                lateralAcc.add(Double.parseDouble(p[5]));
-                battery.add(Double.parseDouble(p[6]));
-                distanceFront.add(Double.parseDouble(p[7]));
-                event.add(p[8]);
-                manoeuvre.add(p[9]);
-                terrain.add(p[10]);
-                weather.add(p[11]);
-                gpsLat.add(Double.parseDouble(p[12]));
-                gpsLon.add(Double.parseDouble(p[13]));
-                idx.add(i++);
-            }
-        }
+    @ResponseBody
+    @GetMapping("/api/routes")
+    public List<Route> routes() {
+        return new RouteDao().findAll();
+    }
 
-        Map<String, Object> series = new HashMap<>();
-        series.put("speed", speed);
-        series.put("rpm", rpm);
-        series.put("steering", steering);
-        series.put("distance", distance);
-        series.put("accel", accel);
-        series.put("lateral_acc", lateralAcc);
-        series.put("battery", battery);
-        series.put("distance_front", distanceFront);
-        series.put("event", event);
-        series.put("manoeuvre", manoeuvre);
-        series.put("terrain_type", terrain);
-        series.put("weather_condition", weather);
-        series.put("terrain", terrain);
-        series.put("weather", weather);
-        series.put("gps_lat", gpsLat);
-        series.put("gps_lon", gpsLon);
+    @ResponseBody
+    @GetMapping("/api/missions")
+    public List<Mission> missions() {
+        return new MissionDao().findAll();
+    }
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("idx", idx);
-        result.put("series", series);
-        return result;
+    private Map<String, Object> loadDbData() {
+        return new DriveDataDao().findAll();
     }
 }
