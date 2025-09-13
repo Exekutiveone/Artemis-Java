@@ -22,16 +22,18 @@ public class WebController {
 
     // Startseite -> Template (index.html)
     @GetMapping("/")
-    public String index(Model model) {
-        model.addAttribute("title", "Artemis Java");
-        return "index"; // sucht templates/index.html
+    public String index() {
+        return "index"; // liefert die React-Startseite
     }
 
     // Beispiel-API Endpoint -> JSON
     @ResponseBody
     @GetMapping("/api/data")
-    public String getData() {
-        return "{ \"status\": \"ok\", \"message\": \"Hello from Spring Boot!\" }";
+    public Map<String, String> getData() {
+        Map<String, String> data = new HashMap<>();
+        data.put("status", "ok");
+        data.put("message", "Hello from Spring Boot!");
+        return data;
     }
 
     // Neue Seite -> Template (chart.html)
