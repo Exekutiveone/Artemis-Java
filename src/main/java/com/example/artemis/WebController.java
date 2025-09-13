@@ -161,6 +161,8 @@ public class WebController {
         series.put("manoeuvre", manoeuvre);
         series.put("terrain_type", terrain);
         series.put("weather_condition", weather);
+        series.put("terrain", terrain);
+        series.put("weather", weather);
         series.put("gps_lat", gpsLat);
         series.put("gps_lon", gpsLon);
 
