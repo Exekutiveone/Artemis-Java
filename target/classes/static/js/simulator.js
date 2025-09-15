@@ -14,6 +14,12 @@ async function loadMissionAssetSelects(){
   const assets = await fetch('/api/assets').then(r=>r.json()).catch(()=>[]);
   mSel.innerHTML = missions.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
   aSel.innerHTML = assets.map(a=>`<option value="${a.id}">${a.name}</option>`).join('');
+  // Preselect from query params if present
+  const params = new URLSearchParams(location.search);
+  const mid = params.get('missionId');
+  const aid = params.get('assetId');
+  if (mid) mSel.value = mid;
+  if (aid) aSel.value = aid;
 }
 
 function initMap(){
@@ -145,4 +151,3 @@ document.addEventListener('DOMContentLoaded', () => {
   bindUi();
   loadMissionAssetSelects();
 });
-

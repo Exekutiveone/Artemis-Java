@@ -41,6 +41,14 @@ function App() {
     location.href = '/logs' + (qs ? ('?' + qs) : '');
   };
 
+  const gotoSimulator = () => {
+    const params = new URLSearchParams();
+    if (selectedMission) params.set('missionId', selectedMission);
+    if (selectedAsset) params.set('assetId', selectedAsset);
+    const qs = params.toString();
+    location.href = '/simulator' + (qs ? ('?' + qs) : '');
+  };
+
   return React.createElement(
     'div',
     { className: 'container py-5' },
@@ -66,7 +74,8 @@ function App() {
           ),
           React.createElement('div', { className:'col-md-2 d-grid gap-2' },
             React.createElement('button', { className:'btn btn-primary', onClick: gotoChart }, 'Chart anzeigen'),
-            React.createElement('button', { className:'btn btn-outline-secondary', onClick: gotoLogs }, 'Logs anzeigen')
+            React.createElement('button', { className:'btn btn-outline-secondary', onClick: gotoLogs }, 'Logs anzeigen'),
+            React.createElement('button', { className:'btn btn-outline-light', onClick: gotoSimulator }, 'Simulator öffnen')
           )
         )
       )
