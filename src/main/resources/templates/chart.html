@@ -111,9 +111,10 @@
   </div>
 
   <script th:inline="javascript">
-    let labelsFull = [];
-    let sFull = {};
-    let currentMissionId = null;
+    let labelsFull = /*[[${idx}]]*/ [];
+    let sFull = /*[[${series}]]*/ {};
+    let currentMissionId = /*[[${missionId}]]*/ null;
+    let currentAssetId = /*[[${assetId}]]*/ null;
   </script>
   <script src="/js/calculate.js?v=5" defer></script>
   <script src="/js/boxplot.js?v=5" defer></script>
@@ -135,8 +136,14 @@
       });
       aSel.addEventListener('change', loadSeriesFromSelection);
 
-      // Auto-select when exactly one mission exists
-      if (missions && missions.length === 1) {
+      if (currentMissionId) {
+        mSel.value = currentMissionId;
+        await populateAssets(currentMissionId);
+        if (currentAssetId) {
+          aSel.value = currentAssetId;
+        }
+        await loadSeriesFromSelection();
+      } else if (missions && missions.length === 1) {
         mSel.value = missions[0].id;
         // Trigger change handler to load assets + series
         const evt = new Event('change');
@@ -194,7 +201,12 @@
       applyRange();
     }
 
-    document.addEventListener('DOMContentLoaded', () => { loadMissionsAndAssets(); });
+    document.addEventListener('DOMContentLoaded', () => {
+      if (labelsFull && labelsFull.length) {
+        applyRange();
+      }
+      loadMissionsAndAssets();
+    });
   </script>
 </body>
 </html>
