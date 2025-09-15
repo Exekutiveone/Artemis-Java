@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>Asset-Modelle</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/js/vendor/react.production.min.js?v=2" defer></script>
+  <script src="/js/vendor/react-dom.production.min.js?v=2" defer></script>
+  <script src="/js/twod.js?v=3" defer></script>
+</head>
+<body class="text-light" style="background:#121212">
+<div class="container py-4">
+  <h1 class="mb-4">Asset-Modelle – Zuordnung</h1>
+  <div class="row g-3">
+    <div class="col-12 col-lg-4">
+      <div class="card bg-dark border-secondary">
+        <div class="card-body">
+          <h5 class="card-title">Neues Modell</h5>
+          <form id="modelForm" class="vstack gap-2">
+            <input class="form-control" name="name" placeholder="Modellname" required />
+            <textarea class="form-control" name="description" placeholder="Beschreibung"></textarea>
+            <button class="btn btn-primary" type="submit">Erstellen</button>
+          </form>
+        </div>
+      </div>
+      <div class="card bg-dark border-secondary mt-3">
+        <div class="card-body">
+          <h5 class="card-title">Modelle</h5>
+          <div id="modelList"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-8">
+      <div id="assignRoot"></div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

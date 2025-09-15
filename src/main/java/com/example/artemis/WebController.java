@@ -1,8 +1,11 @@
+// Marina
+
 package com.example.artemis;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.ui.Model;
 
 import java.io.BufferedReader;
@@ -16,14 +19,31 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Controller
 public class WebController {
+
+    @Autowired(required = false)
+    private JdbcTemplate jdbc;
 
     // Startseite -> Template (index.html)
     @GetMapping("/")
     public String index() {
         return "index"; // liefert die React-Startseite
+    }
+
+    // Assets Seite -> Template (assets.html)
+    @GetMapping("/assets")
+    public String assets() {
+        return "assets";
+    }
+
+    // Asset Detail Seite
+    @GetMapping("/assets/{id}")
+    public String assetDetail() {
+        return "asset_detail";
     }
 
     // Beispiel-API Endpoint -> JSON
@@ -53,33 +73,62 @@ public class WebController {
         return "trajectory";
     }
 
+    // Zweidimensionale Analyse Seite
+    @GetMapping("/zweidimensionale_analyse.html")
+    public String twoD() {
+        return "zweidimensionale_analyse";
+    }
+
+    // Missionen Seite
+    @GetMapping("/missions")
+    public String missions() {
+        return "missions";
+    }
+
     @ResponseBody
     @GetMapping("/api/series")
-    public Map<String, Object> series() throws IOException {
+    public Map<String, Object> series(@RequestParam(value = "missionId", required = false) String missionId,
+                                      @RequestParam(value = "assetId", required = false) String assetId) throws IOException {
+        if (missionId != null && jdbc != null) {
+            return loadDbSeries(missionId, assetId);
+        }
         return loadCsvData();
     }
 
     @ResponseBody
     @GetMapping("/api/drive_style")
-    public List<Map<String, Object>> driveStyle() throws IOException {
-        Path csvPath = Paths.get("Data Base", "fahrtanalyse_daten.csv");
+    public List<Map<String, Object>> driveStyle(@RequestParam(value = "missionId", required = false) String missionId,
+                                                @RequestParam(value = "assetId", required = false) String assetId) throws IOException {
         List<Double> accel = new ArrayList<>();
         List<Double> steering = new ArrayList<>();
-
-        try (BufferedReader br = Files.newBufferedReader(csvPath)) {
-            br.readLine(); // header
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] p = line.split(",");
-                if (p.length < 6) continue;
-                accel.add(Double.parseDouble(p[4]));
-                steering.add(Double.parseDouble(p[2]));
+        if (missionId != null && jdbc != null) {
+            String sql = "SELECT accel_m_s2, steering_deg FROM asset_logs WHERE mission_id = ?" +
+                    (assetId != null ? " AND asset_id = ?" : "") + " ORDER BY id ASC";
+            jdbc.query(sql, ps -> {
+                ps.setString(1, missionId);
+                if (assetId != null) ps.setString(2, assetId);
+            }, rs -> {
+                Double a = rs.getObject(1) != null ? rs.getDouble(1) : null;
+                Double s = rs.getObject(2) != null ? rs.getDouble(2) : null;
+                accel.add(a == null ? 0.0 : a);
+                steering.add(s == null ? 0.0 : s);
+            });
+        } else {
+            Path csvPath = Paths.get("Data Base", "fahrtanalyse_daten.csv");
+            try (BufferedReader br = Files.newBufferedReader(csvPath)) {
+                br.readLine(); // header
+                String line;
+                while ((line = br.readLine()) != null) {
+                    String[] p = line.split(",");
+                    if (p.length < 6) continue;
+                    accel.add(Double.parseDouble(p[4]));
+                    steering.add(Double.parseDouble(p[2]));
+                }
             }
         }
 
         double maxAcc = accel.stream().mapToDouble(v -> Math.abs(v)).max().orElse(1.0);
         double maxSteer = steering.stream().mapToDouble(v -> Math.abs(v)).max().orElse(1.0);
-
         List<Map<String, Object>> result = new ArrayList<>();
         for (int i = 0; i < accel.size(); i++) {
             double score = (Math.abs(accel.get(i)) / maxAcc + Math.abs(steering.get(i)) / maxSteer) / 2.0;
@@ -93,7 +142,6 @@ public class WebController {
             row.put("score", Math.round(score * 100.0) / 100.0);
             result.add(row);
         }
-
         return result;
     }
 
@@ -107,6 +155,9 @@ public class WebController {
         }
     }
 
+
+
+// Marina + Sally
     private Map<String, Object> loadCsvData() throws IOException {
         Path csvPath = Paths.get("Data Base", "fahrtanalyse_daten.csv");
 
@@ -172,5 +223,75 @@ public class WebController {
         result.put("idx", idx);
         result.put("series", series);
         return result;
+    }
+
+    private Map<String, Object> loadDbSeries(String missionId, String assetId) {
+        List<Integer> idx = new ArrayList<>();
+        List<Double> speed = new ArrayList<>();
+        List<Double> rpm = new ArrayList<>();
+        List<Double> steering = new ArrayList<>();
+        List<Double> distance = new ArrayList<>();
+        List<Double> accel = new ArrayList<>();
+        List<Double> lateralAcc = new ArrayList<>();
+        List<Double> battery = new ArrayList<>();
+        List<Double> distanceFront = new ArrayList<>();
+        List<String> event = new ArrayList<>();
+        List<String> manoeuvre = new ArrayList<>();
+        List<String> terrain = new ArrayList<>();
+        List<String> weather = new ArrayList<>();
+        List<Double> gpsLat = new ArrayList<>();
+        List<Double> gpsLon = new ArrayList<>();
+
+        String sql = "SELECT rpm, steering_deg, distance_m, accel_m_s2, lateral_acc_m_s2, battery_pct, distance_front_m, event_code, manoeuvre, terrain_type, weather_condition, gps_lat, gps_lon FROM asset_logs WHERE mission_id = ?" + (assetId != null ? " AND asset_id = ?" : "") + " ORDER BY id ASC";
+        jdbc.query(sql, ps -> {
+            ps.setString(1, missionId);
+            if (assetId != null) ps.setString(2, assetId);
+        }, rs -> {
+            rpm.add(getDouble(rs, 1));
+            steering.add(getDouble(rs, 2));
+            distance.add(getDouble(rs, 3));
+            accel.add(getDouble(rs, 4));
+            lateralAcc.add(getDouble(rs, 5));
+            battery.add(getDouble(rs, 6));
+            distanceFront.add(getDouble(rs, 7));
+            event.add(rs.getString(8) == null ? "-" : rs.getString(8));
+            manoeuvre.add(rs.getString(9) == null ? "-" : rs.getString(9));
+            terrain.add(rs.getString(10) == null ? "-" : rs.getString(10));
+            weather.add(rs.getString(11) == null ? "-" : rs.getString(11));
+            gpsLat.add(getDouble(rs, 12));
+            gpsLon.add(getDouble(rs, 13));
+        });
+        for (int i = 0; i < rpm.size(); i++) {
+            speed.add(rpm.get(i) == null ? null : rpm.get(i) / 100.0);
+            idx.add(i);
+        }
+
+        Map<String, Object> series = new HashMap<>();
+        series.put("speed", speed);
+        series.put("rpm", rpm);
+        series.put("steering", steering);
+        series.put("distance", distance);
+        series.put("accel", accel);
+        series.put("lateral_acc", lateralAcc);
+        series.put("battery", battery);
+        series.put("distance_front", distanceFront);
+        series.put("event", event);
+        series.put("manoeuvre", manoeuvre);
+        series.put("terrain_type", terrain);
+        series.put("weather_condition", weather);
+        series.put("terrain", terrain);
+        series.put("weather", weather);
+        series.put("gps_lat", gpsLat);
+        series.put("gps_lon", gpsLon);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("idx", idx);
+        result.put("series", series);
+        return result;
+    }
+
+    private static Double getDouble(java.sql.ResultSet rs, int col) throws java.sql.SQLException {
+        Object o = rs.getObject(col);
+        return o == null ? null : rs.getDouble(col);
     }
 }

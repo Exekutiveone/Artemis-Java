@@ -44,3 +44,41 @@ h1 {
   from {opacity: 0; transform: translateY(20px);}
   to {opacity: 1; transform: translateY(0);}
 }
+
+/* Cards / Tiles */
+.card.bg-dark {
+  background-color: #1a1a1a !important;
+  border-color: #2a2a2a !important;
+}
+
+.card-hover {
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  border-radius: 12px;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0,0,0,.35);
+  border-color: #3b3b3b !important;
+}
+
+/* Asset tiles */
+.asset-card img {
+  height: 180px;
+  object-fit: cover;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+.asset-card .badge { font-weight: 500; }
+.asset-card .badge + .badge { margin-left: .25rem; }
+
+/* Generic badge colors on dark */
+.badge.text-bg-primary { background-color: #0d6efd !important; color: #fff; }
+.badge.text-bg-secondary { background-color: #444 !important; color: #ddd; }
+
+/* Forms dark theme */
+.form-control, .form-select { background-color: #2b2b2b; color: #e5e5e5; border-color: #3a3a3a; }
+.form-control::placeholder { color: #888; }
+.btn-primary { background-color: #0d6efd; border-color: #0d6efd; }
+.btn-primary:hover { background-color: #0b5ed7; border-color: #0a58ca; }
