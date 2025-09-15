@@ -4,6 +4,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.Map;
+import java.util.List;
 
 @Repository
 public class AssetLogDao {
@@ -50,5 +51,26 @@ public class AssetLogDao {
 
     public int deleteByAsset(String assetId) {
         return jdbc.update("DELETE FROM asset_logs WHERE asset_id = ?", assetId);
+    }
+
+    public List<Map<String, Object>> listLogs(String missionId, String assetId, Integer limit) {
+        StringBuilder sql = new StringBuilder("SELECT id, asset_id, mission_id, timestamp, rpm, steering_deg, distance_m, accel_m_s2, lateral_acc_m_s2, battery_pct, distance_front_m, event_code, manoeuvre, terrain_type, weather_condition, gps_lat, gps_lon FROM asset_logs");
+        java.util.List<Object> args = new java.util.ArrayList<>();
+        boolean whereAdded = false;
+        if (missionId != null && !missionId.isEmpty()) {
+            sql.append(whereAdded ? " AND" : " WHERE").append(" mission_id = ?");
+            args.add(missionId);
+            whereAdded = true;
+        }
+        if (assetId != null && !assetId.isEmpty()) {
+            sql.append(whereAdded ? " AND" : " WHERE").append(" asset_id = ?");
+            args.add(assetId);
+            whereAdded = true;
+        }
+        sql.append(" ORDER BY id ASC");
+        if (limit != null && limit > 0) {
+            sql.append(" LIMIT ").append(limit);
+        }
+        return jdbc.queryForList(sql.toString(), args.toArray());
     }
 }

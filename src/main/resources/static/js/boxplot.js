@@ -3,6 +3,7 @@
 const boxplotRefs = {};
 
 function buildBoxplot(range) {
+  const chartData = (typeof getChartData === 'function') ? getChartData() : [];
   chartData.forEach(([id, label, data]) => {
     const canvas = document.getElementById(`boxplot_${id}`);
     if (!canvas) return;

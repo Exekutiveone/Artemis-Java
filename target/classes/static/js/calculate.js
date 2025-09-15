@@ -1,7 +1,10 @@
 'use strict';
 
 function computeStats(data) {
-  const n = data.length;
+  const n = (Array.isArray(data) ? data.length : 0);
+  if (!n) {
+    return { avg: '-', median: '-', rangeVal: '-', iqr: '-', variance: '-', stdDev: '-', varCoeff: '-' };
+  }
   const avgNum = data.reduce((a, b) => a + b, 0) / n;
   const sorted = [...data].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
@@ -39,6 +42,8 @@ function computeMovingAverage(data, window) {
   return result;
 }
 function computeHistogram(data, bins = 10) {
+  const n = (Array.isArray(data) ? data.length : 0);
+  if (!n) { return { labels: [], counts: [] }; }
   const min = Math.min(...data);
   const max = Math.max(...data);
   const width = (max - min) / bins || 1;
@@ -52,7 +57,8 @@ function computeHistogram(data, bins = 10) {
 }
 
 function computeTrend(data) {
-  const n = data.length;
+  const n = (Array.isArray(data) ? data.length : 0);
+  if (!n) { return { slope: 0, intercept: 0, trend: [] }; }
   const meanX = (n - 1) / 2;
   const meanY = data.reduce((a, b) => a + b, 0) / n;
   let num = 0;

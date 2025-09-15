@@ -56,6 +56,7 @@
 <body>
   <div class="container py-4">
     <h1 class="mb-2">Fahrtanalyse</h1>
+    <div id="chartStatus" class="text-warning mb-2"></div>
     <p class="mb-4">Zeitreihenübersicht aller Sensorkanäle einer simulierten Fahrt.</p>
 
 
@@ -111,17 +112,19 @@
   </div>
 
   <script th:inline="javascript">
-    let labelsFull = [];
-    let sFull = {};
-    let currentMissionId = null;
+    let labelsFull = /*[[${idx}]]*/ [];
+    let sFull = /*[[${series}]]*/ {};
+    let currentMissionId = /*[[${missionId}]]*/ null;
+    let currentAssetId = /*[[${assetId}]]*/ null;
+    if (!currentMissionId) { labelsFull = []; sFull = {}; }
   </script>
-  <script src="/js/calculate.js?v=5" defer></script>
-  <script src="/js/boxplot.js?v=5" defer></script>
-  <script src="/js/lorenz.js?v=5" defer></script>
-  <script src="/js/chart.js?v=5" defer></script>
-  <script src="/js/drive_style.js?v=5" defer></script>
-  <script src="/js/map.js?v=5" defer></script>
-  <script src="/js/regression.js?v=5" defer></script>
+  <script src="/js/calculate.js?v=6" defer></script>
+  <script src="/js/boxplot.js?v=6" defer></script>
+  <script src="/js/lorenz.js?v=6" defer></script>
+  <script src="/js/chart.js?v=6" defer></script>
+  <script src="/js/drive_style.js?v=6" defer></script>
+  <script src="/js/map.js?v=6" defer></script>
+  <script src="/js/regression.js?v=6" defer></script>
   <script>
     async function loadMissionsAndAssets() {
       const mSel = document.getElementById('missionSelect');
@@ -135,8 +138,14 @@
       });
       aSel.addEventListener('change', loadSeriesFromSelection);
 
-      // Auto-select when exactly one mission exists
-      if (missions && missions.length === 1) {
+      if (currentMissionId) {
+        mSel.value = currentMissionId;
+        await populateAssets(currentMissionId);
+        if (currentAssetId) {
+          aSel.value = currentAssetId;
+        }
+        await loadSeriesFromSelection();
+      } else if (missions && missions.length === 1) {
         mSel.value = missions[0].id;
         // Trigger change handler to load assets + series
         const evt = new Event('change');
@@ -177,24 +186,85 @@
       const aSel = document.getElementById('assetSelect');
       const missionId = mSel.value;
       const assetId = aSel.value;
-      if (!missionId) { return; }
-      const url = assetId ? `/api/series?missionId=${encodeURIComponent(missionId)}&assetId=${encodeURIComponent(assetId)}` : `/api/series?missionId=${encodeURIComponent(missionId)}`;
-      const data = await fetch(url).then(r=>r.json());
-      labelsFull = data.idx || [];
-      sFull = data.series || {};
-      // Also reload drive style for mission
-      if (typeof loadDriveStyle === 'function') {
-        await loadDriveStyle(missionId, assetId);
+      try {
+        let url;
+        if (missionId) {
+          url = assetId ? `/api/series?missionId=${encodeURIComponent(missionId)}&assetId=${encodeURIComponent(assetId)}` : `/api/series?missionId=${encodeURIComponent(missionId)}`;
+        } else {
+          // Kein Mission gewählt -> CSV-Standarddaten laden, damit der Button immer etwas tut
+          url = '/api/series';
+        }
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error(`Fehler beim Laden: ${resp.status}`);
+        const data = await resp.json();
+        labelsFull = (data && Array.isArray(data.idx)) ? data.idx : [];
+        sFull = (data && data.series) ? data.series : {};
+        if (!labelsFull.length) {
+          console.warn('Keine Daten fuer die Auswahl gefunden');
+        }
+        // Drive-Style nur laden, wenn Mission gesetzt ist
+        if (missionId && typeof loadDriveStyle === 'function') {
+          await loadDriveStyle(missionId, assetId);
+        }
+        // Range auf volle Länge setzen
+        const startEl = document.getElementById('startIdx');
+        const endEl = document.getElementById('endIdx');
+        startEl.value = 0;
+        endEl.value = (labelsFull && labelsFull.length) ? labelsFull.length : 0;
+        applyRange();
+      } catch (e) {
+        console.error('Serie laden fehlgeschlagen:', e);
+        alert('Daten konnten nicht geladen werden. Bitte Mission wählen oder CSV prüfen.');
       }
-      // set range inputs to full length
-      const startEl = document.getElementById('startIdx');
-      const endEl = document.getElementById('endIdx');
-      startEl.value = 0;
-      endEl.value = (labelsFull && labelsFull.length) ? labelsFull.length : 0;
-      applyRange();
     }
 
-    document.addEventListener('DOMContentLoaded', () => { loadMissionsAndAssets(); });
+    document.addEventListener('DOMContentLoaded', () => {
+      if (labelsFull && labelsFull.length) {
+        applyRange();
+      }
+      loadMissionsAndAssets();
+    });
+  </script>
+  <script>
+    // Überschreibe die Ladefunktion: nur DB-basierte Daten (Mission erforderlich)
+    window.loadSeriesFromSelection = async function() {
+      const mSel = document.getElementById('missionSelect');
+      const aSel = document.getElementById('assetSelect');
+      const missionId = mSel.value;
+      const assetId = aSel.value;
+      const statusEl = document.getElementById('chartStatus');
+      try {
+        if (!missionId) {
+          document.getElementById('charts').innerHTML = '';
+          if (statusEl) statusEl.textContent = 'Bitte zuerst eine Mission auswählen (Diagramme basieren nur auf DB-Daten).';
+          return;
+        }
+        if (statusEl) statusEl.textContent = '';
+        const url = assetId ? `/api/series?missionId=${encodeURIComponent(missionId)}&assetId=${encodeURIComponent(assetId)}` : `/api/series?missionId=${encodeURIComponent(missionId)}`;
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error(`Fehler beim Laden: ${resp.status}`);
+        const data = await resp.json();
+        labelsFull = (data && Array.isArray(data.idx)) ? data.idx : [];
+        sFull = (data && data.series) ? data.series : {};
+        const statusEl2 = document.getElementById('chartStatus');
+        if (!labelsFull.length) {
+          if (statusEl2) statusEl2.textContent = 'Keine Daten für die Auswahl gefunden.';
+        } else {
+          if (statusEl2) statusEl2.textContent = '';
+        }
+        const startEl = document.getElementById('startIdx');
+        const endEl = document.getElementById('endIdx');
+        startEl.value = 0;
+        endEl.value = (labelsFull && labelsFull.length) ? labelsFull.length : 0;
+        applyRange();
+        if (typeof loadDriveStyle === 'function') {
+          await loadDriveStyle(missionId, assetId);
+        }
+      } catch (e) {
+        console.error('Serie laden fehlgeschlagen:', e);
+        alert('Daten konnten nicht geladen werden. Bitte Mission/Asset prüfen.');
+      }
+    }
   </script>
 </body>
 </html>

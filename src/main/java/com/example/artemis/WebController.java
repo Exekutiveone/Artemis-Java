@@ -71,7 +71,11 @@ public class WebController {
                 model.addAttribute("assetId", assetId);
             }
         } else {
-            data = loadCsvData();
+            // DB-only: Keine CSV-Fallback-Daten mehr laden. Leere Initialwerte liefern.
+            Map<String, Object> empty = new HashMap<>();
+            empty.put("idx", java.util.List.of());
+            empty.put("series", new HashMap<String, Object>());
+            data = empty;
         }
         model.addAttribute("idx", data.get("idx"));
         model.addAttribute("series", data.get("series"));
@@ -94,6 +98,12 @@ public class WebController {
     @GetMapping("/missions")
     public String missions() {
         return "missions";
+    }
+
+    // Simple logs page with plain table
+    @GetMapping("/logs")
+    public String logsPage() {
+        return "logs";
     }
 
     @ResponseBody

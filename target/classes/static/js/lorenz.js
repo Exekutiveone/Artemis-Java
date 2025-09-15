@@ -4,13 +4,16 @@ const lorenzRefs = {};
 let lorenzRef;
 
 function computeLorenz(data) {
-  const sorted = [...data].map(v => Math.abs(v)).sort((a, b) => a - b);
+  const arr = Array.isArray(data) ? data : [];
+  const sorted = [...arr].map(v => Math.abs(v)).sort((a, b) => a - b);
   const n = sorted.length;
+  if (!n) { return { xs: [0, 1], ys: [0, 0], gini: '0.00' }; }
   const cum = [0];
   for (let i = 0; i < n; i++) {
     cum.push(cum[i] + sorted[i]);
   }
   const total = cum[n];
+  if (!total) { return { xs: [0, 1], ys: [0, 0], gini: '0.00' }; }
   const xs = [0];
   const ys = [0];
   for (let i = 1; i <= n; i++) {
@@ -71,9 +74,9 @@ function buildMetricLorenzChart(id, label, data, range) {
 function buildOverviewLorenzChart(range) {
   const ctx = document.getElementById('lorenz_chart').getContext('2d');
   if (lorenzRef) lorenzRef.destroy();
-  const slice = sFull.speed.slice(range[0], range[1]);
+  const slice = (sFull && Array.isArray(sFull.speed)) ? sFull.speed.slice(range[0], range[1]) : [];
   const { xs, ys, gini } = computeLorenz(slice);
-  document.getElementById('gini_coef').textContent = gini;
+  const gEl = document.getElementById('gini_coef'); if (gEl) gEl.textContent = gini;
   lorenzRef = new Chart(ctx, {
     type: 'line',
     data: {
@@ -111,6 +114,7 @@ function buildOverviewLorenzChart(range) {
 }
 
 function buildAllLorenz(range) {
+  const chartData = (typeof getChartData === 'function') ? getChartData() : [];
   chartData.forEach(([id, label, data]) => {
     const canvas = document.getElementById(`lorenz_${id}`);
     if (!canvas) return;
