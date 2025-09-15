@@ -58,10 +58,21 @@ public class WebController {
 
     // Neue Seite -> Template (chart.html)
     @GetMapping("/chart")
-    public String chart(Model model) throws IOException {
+    public String chart(Model model,
+                        @RequestParam(value = "missionId", required = false) String missionId,
+                        @RequestParam(value = "assetId", required = false) String assetId) throws IOException {
         model.addAttribute("title", "Chart Page");
 
-        Map<String, Object> data = loadCsvData();
+        Map<String, Object> data;
+        if (missionId != null && jdbc != null) {
+            data = loadDbSeries(missionId, assetId);
+            model.addAttribute("missionId", missionId);
+            if (assetId != null) {
+                model.addAttribute("assetId", assetId);
+            }
+        } else {
+            data = loadCsvData();
+        }
         model.addAttribute("idx", data.get("idx"));
         model.addAttribute("series", data.get("series"));
 
