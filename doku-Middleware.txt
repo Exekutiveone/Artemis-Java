@@ -1,0 +1,22 @@
+Die Middleware ist eine Spring-Boot-Anwendung unter src/main/java/com/example/artemis.
+
+config/ enthaelt Hilfsklassen:
+- DatabaseConfig richtet die SQLite-Datenquelle "Data Base/assets.db" ein.
+- DatabaseInit laedt schema.sql und erzeugt beim Start die Tabellen.
+- BrowserOpener oeffnet nach dem Start automatisch den Browser.
+
+Controller liefern die REST- und HTML-Endpunkte:
+- WebController bedient Seiten wie index.html oder assets.html und stellt APIs wie /api/series und /api/drive_style bereit.
+- AssetRestController (/api/assets) listet, erstellt und loescht Assets ueber den AssetService.
+- AssetAssignmentController (/api/assets/{assetId}) ordnet Missionen zu und verwaltet Log-Uploads.
+- MissionRestController (/api/missions) verwaltet Missionen und deren Assets.
+- AssetModelRestController (/api/asset-models) verwaltet Asset-Modelle und Zuordnungen.
+- LogRestController (/api/logs) liefert Logzeilen, optional gefiltert nach Mission oder Asset.
+
+Service:
+- AssetService kapselt Geschaeftslogik rund um Assets und verwendet die DAOs.
+
+Data Access Objects (dao/):
+- AssetDao, MissionDao, AssetModelDao und AssetLogDao fuehren SQL-Operationen wie findAll, insert oder delete aus.
+
+Diese Schicht stellt die REST-APIs bereit und verarbeitet Datenbankabfragen fuer das Frontend.
