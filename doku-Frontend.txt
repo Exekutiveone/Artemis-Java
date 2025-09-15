@@ -1,0 +1,19 @@
+Das Frontend befindet sich im Verzeichnis src/main/resources.
+
+static/ enthaelt statische Dateien:
+- static/css/style.css gestaltet das Layout.
+- static/js/app.js ist der React-Einstieg und laedt Missionen und Assets.
+- static/js/assets.js zeigt die Asset-Uebersicht und legt neue Assets ueber /api/assets an.
+- static/js/missions.js verwaltet Missionen und deren Zuordnungen.
+- Weitere Skripte wie map.js, chart.js oder simulator.js liefern Karten-, Diagramm- und Simulationsfunktionen.
+
+templates/ enthaelt die HTML-Seiten, die vom WebController gerendert werden:
+- templates/index.html ist die Startseite und bindet app.js ein.
+- templates/assets.html zeigt alle Assets und nutzt assets.js.
+- templates/asset_detail.html zeigt Details eines Assets.
+- templates/missions.html dient der Missionsverwaltung.
+- templates/chart.html stellt Messdaten grafisch dar.
+- templates/logs.html zeigt Fahr- und Sensordaten in einer Tabelle mit Karte.
+- templates/simulator.html bietet eine Oberflaeche fuer den Route-Simulator.
+
+Diese Dateien bilden die Benutzeroberflaeche und kommunizieren ueber REST-Aufrufe mit der Middleware.

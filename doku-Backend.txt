@@ -1,0 +1,10 @@
+Der Backend-Bereich umfasst die SQLite-Datenbank im Verzeichnis "Data Base".
+
+- assets.db speichert saemtliche produktive Daten.
+- schema.sql definiert das Datenbankschema mit folgenden Tabellen:
+  - assets: Asset-Stammdaten wie Name, Kategorie, Status, Beschreibung, Bild-URL und Tags.
+  - asset_models sowie asset_model_assets: Modelle und deren Zuordnung zu Assets.
+  - missions sowie mission_assets: Missionen und welche Assets ihnen zugewiesen sind.
+  - asset_logs: telemetrische Logdaten mit Zeitstempel, Fahr- und Sensordaten.
+
+Die DAOs in der Middleware greifen auf diese Tabellen zu, um Assets, Missionen und Fahrdaten abzurufen oder zu speichern.
