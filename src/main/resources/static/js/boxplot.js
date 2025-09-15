@@ -10,7 +10,8 @@ function buildBoxplot(range) {
     const ctx = canvas.getContext('2d');
     if (boxplotRefs[id]) boxplotRefs[id].destroy();
 
-    const sliced = data.slice(range[0], range[1]);
+    const sliced = data.slice(range[0], range[1]).filter((v)=>Number.isFinite(v));
+    if (!sliced.length) { return; }
 
     boxplotRefs[id] = new Chart(ctx, {
       type: 'boxplot',

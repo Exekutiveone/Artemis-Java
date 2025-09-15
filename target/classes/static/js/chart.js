@@ -2,8 +2,9 @@
 
 // Dynamic data provider
 function getEventNumeric() {
-  if (!window.sFull || !Array.isArray(sFull.event)) return [];
-  return sFull.event.map(e => {
+  const SF = (typeof window !== 'undefined' && window.sFull) ? window.sFull : (typeof sFull !== 'undefined' ? sFull : {});
+  if (!SF || !Array.isArray(SF.event)) return [];
+  return SF.event.map(e => {
     if (e === 'bremsung') return -1;
     if (e === 'fahrt') return 0;
     if (e === 'beschleunigung') return 1;
@@ -12,7 +13,7 @@ function getEventNumeric() {
 }
 
 function getChartData() {
-  const S = window.sFull || {};
+  const S = (typeof window !== 'undefined' && window.sFull) ? window.sFull : (typeof sFull !== 'undefined' ? sFull : {});
   const safe = arr => (Array.isArray(arr) ? arr : []);
   return [
     ['speed', 'Geschwindigkeit (m/s)', safe(S.speed)],
@@ -78,7 +79,9 @@ function insertChartBoxes() {
 }
 
 function buildChart(id, label, data, range) {
-  const ctx = document.getElementById(id).getContext('2d');
+  const elem = document.getElementById(id);
+  if (!elem) { console.warn('Canvas not found for', id); return; }
+  const ctx = elem.getContext('2d');
   if (chartRefs[id]) chartRefs[id].destroy();
 
   const sliced = data.slice(range[0], range[1]);
@@ -96,10 +99,11 @@ function buildChart(id, label, data, range) {
   document.getElementById(`vcoeff_${id}`).textContent = stats.varCoeff;
   document.getElementById(`trend_${id}`).textContent = (trend && trend.slope != null) ? trend.slope.toFixed(2) : '-';
 
+  if (typeof Chart === 'undefined') { console.error('Chart.js not loaded'); return; }
   chartRefs[id] = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: (window.labelsFull || []).slice(range[0], range[1]),
+      labels: ((typeof window !== 'undefined' && window.labelsFull) ? window.labelsFull : (typeof labelsFull !== 'undefined' ? labelsFull : [])).slice(range[0], range[1]),
       datasets: [
         { label, data: sliced, borderColor: '#1abc9c', borderWidth: 2, pointRadius: 0, tension: 0.15, fill: false },
         { label: 'Gleitender Mittelwert', data: movingAvg, borderColor: '#f1c40f', borderWidth: 2, pointRadius: 0, tension: 0.15, fill: false },
@@ -120,7 +124,9 @@ function buildChart(id, label, data, range) {
 }
 
 function buildHistogram(id, label, data, range) {
-  const ctx = document.getElementById(`hist_${id}`).getContext('2d');
+  const elem = document.getElementById(`hist_${id}`);
+  if (!elem) { console.warn('Histogram canvas not found for', id); return; }
+  const ctx = elem.getContext('2d');
   if (histogramRefs[id]) histogramRefs[id].destroy();
   const slice = data.slice(range[0], range[1]);
   const hist = computeHistogram(slice, 20);
@@ -153,11 +159,13 @@ function buildPieChart(id, dataMap) {
 }
 
 function buildSequenceChart(id, dataArray) {
-  const ctx = document.getElementById(id).getContext('2d');
+  const elem = document.getElementById(id);
+  if (!elem) { console.warn('Sequence canvas not found for', id); return; }
+  const ctx = elem.getContext('2d');
   const categories = Array.from(new Set(dataArray || []));
   const mapping = {}; categories.forEach((k,i)=>{ mapping[k]=i; });
   const numeric = (dataArray || []).map(v => mapping[v]);
-  const labels = (window.labelsFull || []).map(String);
+  const labels = ((typeof window !== 'undefined' && window.labelsFull) ? window.labelsFull : (typeof labelsFull !== 'undefined' ? labelsFull : [])).map(String);
   if (sequenceChartRefs[id]) sequenceChartRefs[id].destroy();
   sequenceChartRefs[id] = new Chart(ctx, {
     type: 'line',
@@ -170,10 +178,13 @@ function applyRange() {
   const start = parseInt(document.getElementById('startIdx').value);
   const end = parseInt(document.getElementById('endIdx').value);
   const range = [start, end];
-  if (!window.sFull) { return; }
+  if (!((typeof window !== 'undefined' && window.sFull) || (typeof sFull !== 'undefined' && sFull))) { console.warn('sFull missing'); return; }
 
   insertChartBoxes();
-  getChartData().forEach(([id, label, data]) => { buildChart(id, label, data, range); buildHistogram(id, label, data, range); });
+  getChartData().forEach(([id, label, data]) => {
+    try { buildChart(id, label, data, range); } catch (e) { console.error('buildChart failed', id, e); }
+    try { buildHistogram(id, label, data, range); } catch (e) { console.error('buildHistogram failed', id, e); }
+  });
 
   const tbody = document.querySelector('#eventTable tbody');
   tbody.innerHTML = '';
@@ -190,11 +201,31 @@ function applyRange() {
   }
   buildPieChart('freq_chart', eventFreq); buildPieChart('manoeuvre_chart', manoeuvreFreq);
 
-  if (typeof buildBoxplot === 'function') buildBoxplot(range);
-  if (typeof buildAllLorenz === 'function') buildAllLorenz(range);
-  if (typeof buildOverviewLorenzChart === 'function') buildOverviewLorenzChart(range);
+  try {
+    if (typeof buildBoxplot === 'function') buildBoxplot(range);
+  } catch (e) {
+    console.warn('Boxplot rendering skipped:', e && e.message ? e.message : e);
+  }
+  try {
+    if (typeof buildAllLorenz === 'function') buildAllLorenz(range);
+  } catch (e) {
+    console.warn('Lorenz rendering skipped:', e && e.message ? e.message : e);
+  }
+  try {
+    if (typeof buildOverviewLorenzChart === 'function') buildOverviewLorenzChart(range);
+  } catch (e) {
+    console.warn('Lorenz overview skipped:', e && e.message ? e.message : e);
+  }
 
-  // Sequences
-  buildSequenceChart('weatherSeqChart', sFull.weather_condition || []);
-  buildSequenceChart('terrainSeqChart', sFull.terrain_type || []);
+  // Sequences: nur bauen, wenn die Canvas-Elemente existieren
+  try {
+    if (document.getElementById('weatherSeqChart')) {
+      buildSequenceChart('weatherSeqChart', sFull.weather_condition || []);
+    }
+  } catch (e) { console.warn('weatherSeqChart skipped:', e && e.message ? e.message : e); }
+  try {
+    if (document.getElementById('terrainSeqChart')) {
+      buildSequenceChart('terrainSeqChart', sFull.terrain_type || []);
+    }
+  } catch (e) { console.warn('terrainSeqChart skipped:', e && e.message ? e.message : e); }
 }

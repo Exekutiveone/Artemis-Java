@@ -10,7 +10,15 @@ function loadDriveStyle(missionId, assetId) {
   if (params.length) url += '?' + params.join('&');
   return fetch(url)
     .then(r => r.json())
-    .then(d => { driveStyleData = d; });
+    .then(d => {
+      // Erwartet Liste von Objekten mit {index, style, score}
+      // Für die Diagramme verwenden wir den numerischen Score [0..1]
+      if (Array.isArray(d)) {
+        driveStyleData = d.map(x => (x && typeof x.score === 'number') ? x.score : 0);
+      } else {
+        driveStyleData = [];
+      }
+    });
 }
 
 // Initial load no-op; charts page will explicitly call loadDriveStyle when mission changes.

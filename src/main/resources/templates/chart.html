@@ -60,8 +60,6 @@
     <p class="mb-4">Zeitreihenübersicht aller Sensorkanäle einer simulierten Fahrt.</p>
 
 
-    
-
     <div class="row mb-3">
       <div class="col-md-6 mb-2">
         <label class="form-label">Mission</label>
@@ -81,6 +79,20 @@
       </div>
       <div class="col-md-3 d-flex align-items-end">
         <button class="btn btn-outline-light w-100" onclick="loadSeriesFromSelection()">Anzeigen</button>
+      </div>
+    </div>
+
+    <div class="card bg-dark border-secondary mb-3">
+      <div class="card-body">
+        <h6 class="card-title">Debug</h6>
+        <pre id="debugInfo" class="small text-muted" style="white-space:pre-wrap; margin:0"></pre>
+      </div>
+    </div>
+
+    <div class="card bg-dark border-secondary mb-3">
+      <div class="card-body">
+        <h6 class="card-title">Trajektorie</h6>
+        <div id="mapCanvas" style="height:420px;border:1px solid #2c2c2c;border-radius:6px;"></div>
       </div>
     </div>
 
@@ -105,26 +117,29 @@
     
     </div>
 
-    <div class="mt-5" id="regressionSection">
-      <h2 class="mb-3">2D Daten Datentypen</h2>
-      <div id="regressionCharts" class="row"></div>
-    </div>
+    
   </div>
 
   <script th:inline="javascript">
-    let labelsFull = /*[[${idx}]]*/ [];
-    let sFull = /*[[${series}]]*/ {};
-    let currentMissionId = /*[[${missionId}]]*/ null;
-    let currentAssetId = /*[[${assetId}]]*/ null;
+    // Verwende var, damit die Werte als window-Properties sichtbar sind
+    var labelsFull = /*[[${idx}]]*/ [];
+    var sFull = /*[[${series}]]*/ {};
+    var currentMissionId = /*[[${missionId}]]*/ null;
+    var currentAssetId = /*[[${assetId}]]*/ null;
     if (!currentMissionId) { labelsFull = []; sFull = {}; }
+    // Spiegel auf window, da die Rendering-Skripte window.sFull erwarten
+    window.labelsFull = labelsFull;
+    window.sFull = sFull;
+    // User-Range Handling
+    window.__rangeLocked = false;
   </script>
-  <script src="/js/calculate.js?v=6" defer></script>
-  <script src="/js/boxplot.js?v=6" defer></script>
-  <script src="/js/lorenz.js?v=6" defer></script>
-  <script src="/js/chart.js?v=6" defer></script>
-  <script src="/js/drive_style.js?v=6" defer></script>
-  <script src="/js/map.js?v=6" defer></script>
-  <script src="/js/regression.js?v=6" defer></script>
+  <script src="/js/calculate.js?v=7" defer></script>
+  <script src="/js/boxplot.js?v=7" defer></script>
+  <script src="/js/lorenz.js?v=7" defer></script>
+  <script src="/js/chart.js?v=7" defer></script>
+  <script src="/js/drive_style.js?v=7" defer></script>
+  <script src="/js/map.js?v=7" defer></script>
+  
   <script>
     async function loadMissionsAndAssets() {
       const mSel = document.getElementById('missionSelect');
@@ -199,6 +214,9 @@
         const data = await resp.json();
         labelsFull = (data && Array.isArray(data.idx)) ? data.idx : [];
         sFull = (data && data.series) ? data.series : {};
+        // Auch auf window spiegeln, damit chart.js sie sieht
+        window.labelsFull = labelsFull;
+        window.sFull = sFull;
         if (!labelsFull.length) {
           console.warn('Keine Daten fuer die Auswahl gefunden');
         }
@@ -221,8 +239,18 @@
     document.addEventListener('DOMContentLoaded', () => {
       if (labelsFull && labelsFull.length) {
         applyRange();
+        if (typeof window.renderRouteMap === 'function') {
+          const s = parseInt(document.getElementById('startIdx').value||'0',10);
+          const e = parseInt(document.getElementById('endIdx').value||'0',10);
+          window.renderRouteMap([s,e]);
+        }
       }
       loadMissionsAndAssets();
+      // Range-Inputs: Nutzeränderungen merken und live anwenden
+      const sEl = document.getElementById('startIdx');
+      const eEl = document.getElementById('endIdx');
+      if (sEl) sEl.addEventListener('input', () => { window.__rangeLocked = true; applyRange(); if (typeof window.renderRouteMap==='function'){ const s=parseInt(sEl.value||'0',10); const e=parseInt(eEl.value||'0',10); window.renderRouteMap([s,e]); }});
+      if (eEl) eEl.addEventListener('input', () => { window.__rangeLocked = true; applyRange(); if (typeof window.renderRouteMap==='function'){ const s=parseInt(sEl.value||'0',10); const e=parseInt(eEl.value||'0',10); window.renderRouteMap([s,e]); }});
     });
   </script>
   <script>
@@ -257,12 +285,77 @@
         startEl.value = 0;
         endEl.value = (labelsFull && labelsFull.length) ? labelsFull.length : 0;
         applyRange();
+        if (typeof window.renderRouteMap === 'function') {
+          const s = parseInt(startEl.value||'0',10);
+          const e = parseInt(endEl.value||'0',10);
+          window.renderRouteMap([s,e]);
+        }
         if (typeof loadDriveStyle === 'function') {
           await loadDriveStyle(missionId, assetId);
         }
       } catch (e) {
         console.error('Serie laden fehlgeschlagen:', e);
         alert('Daten konnten nicht geladen werden. Bitte Mission/Asset prüfen.');
+      }
+    }
+  </script>
+</script>
+  <script>
+    // Debug-Variante: überschreibt erneut und loggt Details
+    window.loadSeriesFromSelection = async function() {
+      const mSel = document.getElementById('missionSelect');
+      const aSel = document.getElementById('assetSelect');
+      const missionId = mSel && mSel.value;
+      const assetId = aSel && aSel.value;
+      const statusEl = document.getElementById('chartStatus');
+      const dbg = document.getElementById('debugInfo');
+      try {
+        if (!missionId) {
+          const chartsEl = document.getElementById('charts');
+          if (chartsEl) chartsEl.innerHTML = '';
+          if (statusEl) statusEl.textContent = 'Bitte zuerst eine Mission auswählen (Diagramme basieren nur auf DB-Daten).';
+          if (dbg) dbg.textContent = 'No mission selected. Waiting for selection...';
+          return;
+        }
+        if (statusEl) statusEl.textContent = '';
+        const url = assetId ? `/api/series?missionId=${encodeURIComponent(missionId)}&assetId=${encodeURIComponent(assetId)}&debug=true` : `/api/series?missionId=${encodeURIComponent(missionId)}&debug=true`;
+        if (dbg) dbg.textContent = `Fetching: ${url}`;
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error(`Fehler beim Laden: ${resp.status}`);
+        const data = await resp.json();
+        labelsFull = (data && Array.isArray(data.idx)) ? data.idx : [];
+        sFull = (data && data.series) ? data.series : {};
+        const keys = Object.keys(sFull || {});
+        const preview = keys.slice(0, 6).map(k => `${k}:${Array.isArray(sFull[k]) ? sFull[k].length : 0}`).join(', ');
+        if (dbg) dbg.textContent = `Fetched: ${url}\nmissionId: ${missionId}${assetId ? `, assetId: ${assetId}` : ''}\nidx: ${labelsFull.length}\nseries keys: ${keys.length}${keys.length ? ' ('+preview+' ...)' : ''}`;
+        // Zuerst Drive-Style laden, dann rendern, damit die Datenreihen übereinstimmen
+        if (typeof loadDriveStyle === 'function') {
+          await loadDriveStyle(missionId, assetId);
+        }
+        // Range nur initial setzen, Nutzerauswahl ansonsten beibehalten
+        const startEl = document.getElementById('startIdx');
+        const endEl = document.getElementById('endIdx');
+        const total = (labelsFull && labelsFull.length) ? labelsFull.length : 0;
+        const startVal = startEl ? parseInt(startEl.value || '0', 10) : 0;
+        const endVal = endEl ? parseInt(endEl.value || '0', 10) : 0;
+        const needInit = !window.__rangeLocked || endVal <= 0 || endVal > total || startVal < 0 || startVal >= total || startVal >= endVal;
+        if (needInit) {
+          if (startEl) startEl.value = 0;
+          if (endEl) endEl.value = total;
+          window.__rangeLocked = false; // initial gesetzt
+        }
+        applyRange();
+        // Statushinweis bei leerem Ergebnis
+        const statusEl2 = document.getElementById('chartStatus');
+        if (!labelsFull || !labelsFull.length) {
+          if (statusEl2) statusEl2.textContent = 'Keine Daten für die Auswahl gefunden.';
+        } else {
+          if (statusEl2) statusEl2.textContent = '';
+        }
+      } catch (e) {
+        console.error('Serie laden fehlgeschlagen:', e);
+        alert('Daten konnten nicht geladen werden. Bitte Mission/Asset prüfen.');
+        if (dbg) dbg.textContent = `Error: ${e && e.message ? e.message : e}`;
       }
     }
   </script>

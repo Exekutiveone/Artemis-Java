@@ -12,12 +12,18 @@ public class AssetLogDao {
     public AssetLogDao(JdbcTemplate jdbc) { this.jdbc = jdbc; }
 
     public void insertRow(String assetId, String missionId, Map<String, String> row) {
+        // Fallback-Zeitstempel generieren, falls Spalte 'timestamp' fehlt/leer ist
+        String ts = row.getOrDefault("timestamp", null);
+        if (ts == null || ts.isBlank()) {
+            ts = java.time.Instant.now().toString();
+        }
+
         jdbc.update(
             "INSERT INTO asset_logs (asset_id, mission_id, timestamp, rpm, steering_deg, distance_m, accel_m_s2, lateral_acc_m_s2, battery_pct, distance_front_m, event_code, manoeuvre, terrain_type, weather_condition, gps_lat, gps_lon) " +
             "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             assetId,
             missionId,
-            row.getOrDefault("timestamp", null),
+            ts,
             parseInt(row.get("rpm")),
             parseDouble(row.get("steering_deg")),
             parseDouble(row.get("distance_m")),
@@ -35,7 +41,21 @@ public class AssetLogDao {
     }
 
     private Integer parseInt(String s) {
-        try { return s == null || s.isEmpty() ? null : Integer.parseInt(s); } catch (Exception e) { return null; }
+        try {
+            if (s == null) return null;
+            String v = s.trim();
+            if (v.isEmpty()) return null;
+            // Akzeptiere auch Dezimalwerte und runde auf ganze Zahl
+            if (v.contains(".") || v.contains(",")) {
+                // Vereinheitliche Dezimaltrennzeichen auf Punkt
+                v = v.replace(',', '.');
+                double d = Double.parseDouble(v);
+                return (int)Math.round(d);
+            }
+            return Integer.parseInt(v);
+        } catch (Exception e) {
+            return null;
+        }
     }
     private Double parseDouble(String s) {
         try { return s == null || s.isEmpty() ? null : Double.parseDouble(s); } catch (Exception e) { return null; }

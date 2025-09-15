@@ -4,7 +4,7 @@ const lorenzRefs = {};
 let lorenzRef;
 
 function computeLorenz(data) {
-  const arr = Array.isArray(data) ? data : [];
+  const arr = Array.isArray(data) ? data.filter((v)=>Number.isFinite(v)) : [];
   const sorted = [...arr].map(v => Math.abs(v)).sort((a, b) => a - b);
   const n = sorted.length;
   if (!n) { return { xs: [0, 1], ys: [0, 0], gini: '0.00' }; }

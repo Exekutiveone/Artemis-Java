@@ -97,7 +97,12 @@ function App() {
       React.createElement(
         'li',
         { className: 'list-group-item' },
-        React.createElement('a', { href: '/trajectory/' }, 'Trajektorie Visualisierung')
+        React.createElement('a', { href: '/logs' }, 'Logs (mit Karte)')
+      ),
+      React.createElement(
+        'li',
+        { className: 'list-group-item' },
+        React.createElement('a', { href: '/simulator' }, 'Route-Simulator')
       ),
       React.createElement(
         'li',
@@ -136,4 +141,3 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', mountApp);
   }
 }
-

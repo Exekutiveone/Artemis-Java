@@ -1,12 +1,17 @@
 'use strict';
 
+function finiteOnly(arr) {
+  return (Array.isArray(arr) ? arr.filter((v) => Number.isFinite(v)) : []);
+}
+
 function computeStats(data) {
-  const n = (Array.isArray(data) ? data.length : 0);
+  const arr = finiteOnly(data);
+  const n = arr.length;
   if (!n) {
     return { avg: '-', median: '-', rangeVal: '-', iqr: '-', variance: '-', stdDev: '-', varCoeff: '-' };
   }
-  const avgNum = data.reduce((a, b) => a + b, 0) / n;
-  const sorted = [...data].sort((a, b) => a - b);
+  const avgNum = arr.reduce((a, b) => a + b, 0) / n;
+  const sorted = [...arr].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
   const median = sorted.length % 2 === 0
     ? ((sorted[mid - 1] + sorted[mid]) / 2).toFixed(2)
@@ -16,7 +21,7 @@ function computeStats(data) {
   const q3 = sorted[Math.floor(sorted.length * 0.75)];
   const iqr = (q3 - q1).toFixed(2);
 
-  const varianceNum = data.reduce((sum, val) => sum + Math.pow(val - avgNum, 2), 0) / n;
+  const varianceNum = arr.reduce((sum, val) => sum + Math.pow(val - avgNum, 2), 0) / n;
   const stdNum = Math.sqrt(varianceNum);
   const varCoeffNum = avgNum !== 0 ? stdNum / avgNum : 0;
 
@@ -35,20 +40,22 @@ function computeMovingAverage(data, window) {
   const result = [];
   for (let i = 0; i < data.length; i++) {
     const start = Math.max(0, i - window + 1);
-    const slice = data.slice(start, i + 1);
+    const slice = finiteOnly(data.slice(start, i + 1));
+    if (!slice.length) { result.push(null); continue; }
     const avg = slice.reduce((sum, v) => sum + v, 0) / slice.length;
     result.push(Number(avg.toFixed(2)));
   }
   return result;
 }
 function computeHistogram(data, bins = 10) {
-  const n = (Array.isArray(data) ? data.length : 0);
+  const arr = finiteOnly(data);
+  const n = arr.length;
   if (!n) { return { labels: [], counts: [] }; }
-  const min = Math.min(...data);
-  const max = Math.max(...data);
+  const min = Math.min(...arr);
+  const max = Math.max(...arr);
   const width = (max - min) / bins || 1;
   const counts = new Array(bins).fill(0);
-  for (const v of data) {
+  for (const v of arr) {
     const idx = Math.min(Math.floor((v - min) / width), bins - 1);
     counts[idx]++;
   }
@@ -57,14 +64,15 @@ function computeHistogram(data, bins = 10) {
 }
 
 function computeTrend(data) {
-  const n = (Array.isArray(data) ? data.length : 0);
+  const arr = finiteOnly(data);
+  const n = arr.length;
   if (!n) { return { slope: 0, intercept: 0, trend: [] }; }
   const meanX = (n - 1) / 2;
-  const meanY = data.reduce((a, b) => a + b, 0) / n;
+  const meanY = arr.reduce((a, b) => a + b, 0) / n;
   let num = 0;
   let den = 0;
   for (let i = 0; i < n; i++) {
-    num += (i - meanX) * (data[i] - meanY);
+    num += (i - meanX) * (arr[i] - meanY);
     den += (i - meanX) * (i - meanX);
   }
   const slope = den ? num / den : 0;

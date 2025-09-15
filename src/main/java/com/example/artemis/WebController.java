@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.ui.Model;
 
-import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.BufferedReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,15 +18,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Controller
 public class WebController {
 
     @Autowired(required = false)
     private JdbcTemplate jdbc;
+
+    private static final Logger log = LoggerFactory.getLogger(WebController.class);
 
     // Startseite -> Template (index.html)
     @GetMapping("/")
@@ -83,10 +86,7 @@ public class WebController {
         return "chart"; // sucht templates/chart.html
     }
 
-    @GetMapping({"/trajectory", "/trajectory/"})
-    public String trajectory() {
-        return "trajectory";
-    }
+    // Trajectory Seite entfernt; Karte wird nun auf /logs angezeigt
 
     // Zweidimensionale Analyse Seite
     @GetMapping("/zweidimensionale_analyse.html")
@@ -106,14 +106,41 @@ public class WebController {
         return "logs";
     }
 
+    // Simulator page to draw routes and synthesize telemetry
+    @GetMapping("/simulator")
+    public String simulator() {
+        return "simulator";
+    }
+
     @ResponseBody
     @GetMapping("/api/series")
     public Map<String, Object> series(@RequestParam(value = "missionId", required = false) String missionId,
-                                      @RequestParam(value = "assetId", required = false) String assetId) throws IOException {
+                                      @RequestParam(value = "assetId", required = false) String assetId,
+                                      @RequestParam(value = "debug", required = false, defaultValue = "false") boolean debug) throws IOException {
+        Map<String, Object> data;
         if (missionId != null && jdbc != null) {
-            return loadDbSeries(missionId, assetId);
+            data = loadDbSeries(missionId, assetId);
+        } else {
+            // DB-only: ohne missionId keine Daten zurückgeben
+            Map<String, Object> empty = new HashMap<>();
+            empty.put("idx", java.util.List.of());
+            empty.put("series", new HashMap<String, Object>());
+            data = empty;
         }
-        return loadCsvData();
+        try {
+            List<?> idx = (List<?>) data.getOrDefault("idx", List.of());
+            Map<?,?> s = (Map<?,?>) data.getOrDefault("series", Map.of());
+            int n = idx != null ? idx.size() : 0;
+            int keys = s != null ? s.size() : 0;
+            if (debug) {
+                log.info("/api/series debug missionId={} assetId={} -> idx={}, seriesKeys={}", missionId, assetId, n, keys);
+            } else if (n == 0) {
+                log.info("/api/series empty result missionId={} assetId={}", missionId, assetId);
+            }
+        } catch (Exception e) {
+            log.warn("/api/series logging error: {}", e.getMessage());
+        }
+        return data;
     }
 
     @ResponseBody
@@ -166,85 +193,11 @@ public class WebController {
         return result;
     }
 
-    @ResponseBody
-    @GetMapping("/api/regression_pairs")
-    public Map<String, Object> regressionPairs() throws IOException {
-        Path jsonPath = Paths.get("Data Base", "fahrtanalyse_regression.json");
-        ObjectMapper mapper = new ObjectMapper();
-        try (BufferedReader br = Files.newBufferedReader(jsonPath)) {
-            return mapper.readValue(br, Map.class);
-        }
-    }
+    // Regression-API entfernt (Python-basierte Daten nicht mehr verwendet)
 
 
 
-// Marina + Sally
-    private Map<String, Object> loadCsvData() throws IOException {
-        Path csvPath = Paths.get("Data Base", "fahrtanalyse_daten.csv");
-
-        List<Integer> idx = new ArrayList<>();
-        List<Double> speed = new ArrayList<>();
-        List<Double> rpm = new ArrayList<>();
-        List<Double> steering = new ArrayList<>();
-        List<Double> distance = new ArrayList<>();
-        List<Double> accel = new ArrayList<>();
-        List<Double> lateralAcc = new ArrayList<>();
-        List<Double> battery = new ArrayList<>();
-        List<Double> distanceFront = new ArrayList<>();
-        List<String> event = new ArrayList<>();
-        List<String> manoeuvre = new ArrayList<>();
-        List<String> terrain = new ArrayList<>();
-        List<String> weather = new ArrayList<>();
-        List<Double> gpsLat = new ArrayList<>();
-        List<Double> gpsLon = new ArrayList<>();
-
-        try (BufferedReader br = Files.newBufferedReader(csvPath)) {
-            String line = br.readLine(); // header
-            int i = 0;
-            while ((line = br.readLine()) != null) {
-                String[] p = line.split(",");
-                if (p.length < 14) continue;
-                speed.add(Double.parseDouble(p[0]));
-                rpm.add(Double.parseDouble(p[1]));
-                steering.add(Double.parseDouble(p[2]));
-                distance.add(Double.parseDouble(p[3]));
-                accel.add(Double.parseDouble(p[4]));
-                lateralAcc.add(Double.parseDouble(p[5]));
-                battery.add(Double.parseDouble(p[6]));
-                distanceFront.add(Double.parseDouble(p[7]));
-                event.add(p[8]);
-                manoeuvre.add(p[9]);
-                terrain.add(p[10]);
-                weather.add(p[11]);
-                gpsLat.add(Double.parseDouble(p[12]));
-                gpsLon.add(Double.parseDouble(p[13]));
-                idx.add(i++);
-            }
-        }
-
-        Map<String, Object> series = new HashMap<>();
-        series.put("speed", speed);
-        series.put("rpm", rpm);
-        series.put("steering", steering);
-        series.put("distance", distance);
-        series.put("accel", accel);
-        series.put("lateral_acc", lateralAcc);
-        series.put("battery", battery);
-        series.put("distance_front", distanceFront);
-        series.put("event", event);
-        series.put("manoeuvre", manoeuvre);
-        series.put("terrain_type", terrain);
-        series.put("weather_condition", weather);
-        series.put("terrain", terrain);
-        series.put("weather", weather);
-        series.put("gps_lat", gpsLat);
-        series.put("gps_lon", gpsLon);
-
-        Map<String, Object> result = new HashMap<>();
-        result.put("idx", idx);
-        result.put("series", series);
-        return result;
-    }
+// CSV-Fallback entfernt: Charts und /api/series sind DB-only
 
     private Map<String, Object> loadDbSeries(String missionId, String assetId) {
         List<Integer> idx = new ArrayList<>();
@@ -308,6 +261,10 @@ public class WebController {
         Map<String, Object> result = new HashMap<>();
         result.put("idx", idx);
         result.put("series", series);
+        try {
+            log.info("loadDbSeries missionId={} assetId={} rows={} seriesKeys={} (rpm={}, steering={})",
+                    missionId, assetId, idx.size(), series.size(), rpm.size(), steering.size());
+        } catch (Exception ignored) {}
         return result;
     }
 
